@@ -54,6 +54,7 @@ spieler_pic_size = [0.25, 0.5]
 sterne_size = [0.25, 0.1]
 thumb_size = [0.2, 0.35]
 background_color = [0.5, 0.5, 0.5]  # Background color as RGB tuple
+main_path= "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/"
 setting = 1 # 1 = ohne Scanner, 2 = mit Scanner
 left_but = 'left'
 right_but = 'right'
@@ -68,63 +69,63 @@ elif setting == 2:
 
 # Paths to your picture files (replace these with your actual file paths)
 picture_files_34 = [
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400.bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(1).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(2).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(3).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(4).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(5).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(6).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(7).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(8).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(9).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/34-dots-400x400(10).bmp",
+    main_path + "StimFiles/34-dots-400x400.bmp",
+    main_path + "StimFiles/34-dots-400x400(1).bmp",
+    main_path + "StimFiles/34-dots-400x400(2).bmp",
+    main_path + "StimFiles/34-dots-400x400(3).bmp",
+    main_path + "StimFiles/34-dots-400x400(4).bmp",
+    main_path + "StimFiles/34-dots-400x400(5).bmp",
+    main_path + "StimFiles/34-dots-400x400(6).bmp",
+    main_path + "StimFiles/34-dots-400x400(7).bmp",
+    main_path + "StimFiles/34-dots-400x400(8).bmp",
+    main_path + "StimFiles/34-dots-400x400(9).bmp",
+    main_path + "StimFiles/34-dots-400x400(10).bmp",
 ]
 
 picture_files_36 = [
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400.bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(1).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(2).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(3).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(4).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(5).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(6).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(7).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(8).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(9).bmp",
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/36-dots-400x400(10).bmp",
+    main_path + "StimFiles/36-dots-400x400.bmp",
+    main_path + "StimFiles/36-dots-400x400(1).bmp",
+    main_path + "StimFiles/36-dots-400x400(2).bmp",
+    main_path + "StimFiles/36-dots-400x400(3).bmp",
+    main_path + "StimFiles/36-dots-400x400(4).bmp",
+    main_path + "StimFiles/36-dots-400x400(5).bmp",
+    main_path + "StimFiles/36-dots-400x400(6).bmp",
+    main_path + "StimFiles/36-dots-400x400(7).bmp",
+    main_path + "StimFiles/36-dots-400x400(8).bmp",
+    main_path + "StimFiles/36-dots-400x400(9).bmp",
+    main_path + "StimFiles/36-dots-400x400(10).bmp",
 ]
 
 # Pfade zu den Bildern der Spieler (ersetze diese mit den tatsächlichen Dateipfaden)
 spieler_bildpfade = {
-    spieler_namen['spieler1']: "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/Dummy5_blau.bmp",
-    spieler_namen['spieler2']: "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/Dummy5_gruen.bmp",
-    spieler_namen['spieler3']: "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/Dummy5_rot.bmp",
+    spieler_namen['spieler1']: main_path + "StimFiles/Dummy5_blau.bmp",
+    spieler_namen['spieler2']: main_path + "StimFiles/Dummy5_gruen.bmp",
+    spieler_namen['spieler3']: main_path + "StimFiles/Dummy5_rot.bmp",
 }
 
 # Pfade zu den Sternen :)
 sterne_bildpfade = [
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/3sterren.bmp", # sterne3_pfad = sterne_bildpfade[0]
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/2sterren.bmp", # sterne2_pfad = sterne_bildpfade[1]
-    "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/1ster.bmp", # sterne1_pfad = sterne_bildpfade[2]
+    main_path + "StimFiles/3sterren.bmp", # sterne3_pfad = sterne_bildpfade[0]
+    main_path + "StimFiles/2sterren.bmp", # sterne2_pfad = sterne_bildpfade[1]
+    main_path + "StimFiles/1ster.bmp", # sterne1_pfad = sterne_bildpfade[2]
 ]
 
 #Pfade zu den Daumen
-thumbup_pfad = "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/thumbup.bmp"
-thumbdown_pfad = "C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/thumbdown.bmp"
+thumbup_pfad = main_path + "StimFiles/thumbup.bmp"
+thumbdown_pfad = main_path + "StimFiles/thumbdown.bmp"
 
 # Pfade zu den Instruktionsbildern (ersetze diese mit den tatsächlichen Dateipfaden)
 instruktionsbilder = [
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_initial.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_gegner.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_gegenueber.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_darstellung.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_hier_rel_up.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_hier_rel_dev.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_gleichI.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_missfeedback.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_abgestiegen.bmp",
-    r"C:/Privat/Forschung/Forschungsabteilung/Social Devaluation/PsychoPy Experimente/SocDev/StimFiles/screenshot_abgestiegen.bmp",
+    main_path + r"StimFiles/screenshot_initial.bmp",
+    main_path + r"StimFiles/screenshot_gegner.bmp",
+    main_path + r"StimFiles/screenshot_gegenueber.bmp",
+    main_path + r"StimFiles/screenshot_darstellung.bmp",
+    main_path + r"StimFiles/screenshot_hier_rel_up.bmp",
+    main_path + r"StimFiles/screenshot_hier_rel_dev.bmp",
+    main_path + r"StimFiles/screenshot_gleichI.bmp",
+    main_path + r"StimFiles/screenshot_missfeedback.bmp",
+    main_path + r"StimFiles/screenshot_abgestiegen.bmp",
+    main_path + r"StimFiles/screenshot_abgestiegen.bmp",
 ]
 
 instruktionstexte = [
