@@ -4,6 +4,7 @@
     # Den fMRI-emulator einarbeiten
     # Fixationskreuze einarbeiten nach jeder Runde
     # Regelmäßig (nach jedem Rangreihen-Feedback) auf den Puls des Scanners warten
+    # ggf. feedback und Leistungsmechanismus verändern: statt "richtig" und "falsch" eher "besser / schlechter / gleich"
     
 ## Erledigt:
     # Vor Start des Experiments soll ein Fenster erscheinen, in dem z.B. Patienten-ID und Datum erfasst werden sollen
