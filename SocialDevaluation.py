@@ -37,12 +37,11 @@ spieler_platzierungen = {spieler_namen[name]: 0 for name in spieler_namen}
 #endregion
 
 # Erstelle ein Fenster
-# win = visual.Window(size=(1536, 864), color=(1,1,1), fullscr=True)  # Use RGB tuple for gray color(0.75,0.75,0.75)
 win = visual.Window(size=(1536, 864), color=(0.75,0.75,0.75), fullscr=True)  # Use RGB tuple for gray color(0.75,0.75,0.75)
 
 #region - Initialisiere die Parameter
 num_trials_per_spieler = 10
-num_spieler = len(spieler_namen) - 1
+num_spieler = len(spieler_namen) - 1 # Wieso denn nur 2 Spieler??
 num_trials_gesamt = num_trials_per_spieler * num_spieler
 num_trials_uebung = num_spieler * 2
 trial_duration = 2.0  # 2000ms
