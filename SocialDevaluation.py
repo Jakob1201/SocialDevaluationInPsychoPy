@@ -148,23 +148,18 @@ if "q" in event.waitKeys(keyList=["left", "right", "q"]):
     win.close()
     core.quit()
 
-# Auswahl der möglichen Bilder definieren 
-# -> mit list() wird ein neuer Array erstellt
-available_34_pictures = list(picture_files_34)
-available_36_pictures = list(picture_files_36)
-
 # Beginn der Trials
+last_left_picture = last_right_picture = None
 for spieler_index in range(num_trials_uebung):
     if random.choice([True, False]): # Zufällige Auswahl aus den möglichen Bildern und zufällige Wahl der Position
-        left_picture = random.choice(available_34_pictures)
-        right_picture = random.choice(available_36_pictures)
-        available_34_pictures.remove(left_picture)
-        available_36_pictures.remove(right_picture)
+        left_picture = random.choice([pic for pic in picture_files_34 if pic != last_left_picture])
+        right_picture = random.choice([pic for pic in picture_files_36 if pic != last_right_picture])
     else:
-        left_picture = random.choice(available_36_pictures)
-        right_picture = random.choice(available_34_pictures)
-        available_36_pictures.remove(left_picture)
-        available_34_pictures.remove(right_picture)
+        left_picture = random.choice([pic for pic in picture_files_36 if pic != last_right_picture])
+        right_picture = random.choice([pic for pic in picture_files_34 if pic != last_left_picture])
+    #Setzen der "last pictures" für den nächsten Durchgang
+    last_left_picture = left_picture
+    last_right_picture = right_picture
 
     #Mitspieler festlegen # Vorlage für conditionals der Sterne und Positionen siehe Editordatei "Sterne und Positionszuordnung"
     proband = spieler_namen['spieler2']
