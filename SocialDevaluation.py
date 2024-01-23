@@ -87,6 +87,7 @@ instruktionsbilder = [
     "img/screenshot_missfeedback.bmp",
     "img/screenshot_abgestiegen.bmp",
     "img/screenshot_abgestiegen.bmp", #TODO: Warum zweimal? vlt soll's aufgestiegen sein?
+                                        # screenshot_abgestiegen soll zweimal hintereinander mit unterschiedlichen instruktionstexten dargestellt werden.
 ]
 
 instruktionstexte = [
@@ -158,7 +159,7 @@ for spieler_index in range(num_trials_uebung):
     if random.choice([True, False]): # Zufällige Auswahl aus den möglichen Bildern und zufällige Wahl der Position
         left_picture = random.choice(available_34_pictures)
         right_picture = random.choice(available_36_pictures)
-        available_34_pictures.remove(left_picture)
+        available_34_pictures.remove(left_picture) # FRAGE: Mit dieser .remove Lösung werden nach und nach alle Bilder aus dem array entfernt oder nicht? Ich wollte hier eine Lösung "mit zurücklegen" die verhindert, dass dasselbe Bild in zwei Durchgängen nacheinander an der selben Stelle erscheint.
         available_36_pictures.remove(right_picture)
     else:
         left_picture = random.choice(available_36_pictures)
