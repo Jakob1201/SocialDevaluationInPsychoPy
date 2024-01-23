@@ -52,6 +52,16 @@ spieler_pic_size = [0.25, 0.5]
 sterne_size = [0.25, 0.1]
 thumb_size = [0.2, 0.35]
 background_color = [0.5, 0.5, 0.5]  # Background color as RGB tuple
+setting = 1 # 1 = ohne Scanner, 2 = mit Scanner
+left_but = 'left'
+right_but = 'right'
+
+if setting == 1:
+    left_but = 'left'
+    right_but = 'right'
+elif setting == 2:
+    left_but = 'b'
+    right_but = 'c'
 #endregion
 
 #region - pictures
@@ -87,6 +97,7 @@ instruktionsbilder = [
     "img/screenshot_missfeedback.bmp",
     "img/screenshot_abgestiegen.bmp",
     "img/screenshot_abgestiegen.bmp", #TODO: Warum zweimal? vlt soll's aufgestiegen sein?
+                                        # screenshot_abgestiegen soll zweimal hintereinander mit unterschiedlichen instruktionstexten dargestellt werden.
 ]
 
 instruktionstexte = [
@@ -112,7 +123,7 @@ visual.TextStim(win=win,
     wrapWidth = 1.8
 ).draw()
 win.flip()
-if 'q' in event.waitKeys(keyList=["left", "right", "q"]): 
+if 'q' in event.waitKeys(keyList=["left_but", "right_but", "q"]): 
     win.close()
     core.quit()  
 
@@ -130,11 +141,11 @@ while current_slide < len(instruktionsbilder):
         visual.TextStim(win=win, text="<- Zurück mit der linken Taste", pos=[-0.75,0.2],color=(0,0,5,1), height = 0.06).draw()
     win.flip()
 
-    keys = event.waitKeys(keyList=["left", "right", "q"])
+    keys = event.waitKeys(keyList=["left_but", "right_but", "q"])
 
-    if "left" in keys and current_slide > 0:
+    if "left_but" in keys and current_slide > 0:
         current_slide -= 1
-    elif "right" in keys and current_slide <= len(instruktionsbilder) - 1:
+    elif "right_but" in keys and current_slide <= len(instruktionsbilder) - 1:
         current_slide += 1
     elif "q" in keys:
         win.close()
@@ -144,7 +155,7 @@ while current_slide < len(instruktionsbilder):
 #region - Übungsrunden
 visual.TextStim(win=win, text="Wenn Sie bereit sind in die Übungsrunden zu starten, drücken Sie eine der Tasten unter ihren Fingern.",color = (-1,-1,-1)).draw()
 win.flip()
-if "q" in event.waitKeys(keyList=["left", "right", "q"]):
+if "q" in event.waitKeys(keyList=["left_but", "right_but", "q"]):
     win.close()
     core.quit()
 
@@ -276,16 +287,16 @@ for spieler_index in range(num_trials_uebung):
     else:
         spieler_accuracies[spieler_namen['spieler3']].append(accuracy_op)
 
-    # TODO: das hier könnte auch aus dem Loop über die num_trials_uebung raus oder?!
+    # TODO: das hier könnte auch aus dem Loop über die num_trials_uebung raus oder?!  #Ja könnte es.
     # Wenn alle Durchgänge abgeschlossen sind, zeige die Rangfolge der Spieler an
     if (spieler_index) == num_trials_uebung - 1:
         visual.TextStim(win=win, text="Die Übungsrunden sind abgeschlossen.\n Drücken Sie eine beliebige Taste um sich die Rangreihe anzeigen zu lassen.", color = (-1,-1,-1)).draw()
         win.flip()
-        if 'q' in event.waitKeys(keyList=["left", "right", "q"]):
+        if 'q' in event.waitKeys(keyList=["left_but", "right_but", "q"]):
             win.close()
             core.quit()
         
-        # TODO: ist es absicht, dass bei spieler2 der Faktor 2 fehlt?
+        # TODO: ist es absicht, dass bei spieler2 der Faktor 2 fehlt? # Ja, das ist absicht. spieler 2 spielt ja doppelt so viele Runden wie die die anderen Spieler.
         spieler_leistungen[spieler_namen['spieler1']] = round((sum(spieler_accuracies[spieler_namen['spieler1']])*2)/int(spieler_index+1)*100,2)
         spieler_leistungen[spieler_namen['spieler2']] = round((sum(spieler_accuracies[spieler_namen['spieler2']]))/int(spieler_index+1)*100,2)
         spieler_leistungen[spieler_namen['spieler3']] = round((sum(spieler_accuracies[spieler_namen['spieler3']])*2)/int(spieler_index+1)*100,2)
@@ -336,7 +347,7 @@ for spieler_index in range(num_trials_uebung):
         third_leistung_stim.draw()
         win.flip()
         
-        if 'q' in event.waitKeys(keyList=["left", "right", "q"]):
+        if 'q' in event.waitKeys(keyList=["left_but", "right_but", "q"]):
             win.close()
             core.quit()
 
@@ -362,6 +373,7 @@ event.waitKeys(keyList=['s'])#auf den ersten puls des scanners warten. Der Puls 
 
 # TODO: soooooooooo viel Codedoppelung :( 
 # Das muss aufgeräumt werden....
+# Das stimmt vermutlich auch. Einige Variablen müssen für das "Hauptexperiment" neu initialisiert werden. Mit Funktionen definieren und dann sinnvoll einsetzen kenne ich mich leider nicht aus...
 
 # Auswahl der möglichen Bilder definieren
 available_34_pictures = list(picture_files_34)
@@ -460,13 +472,14 @@ for spieler_index in range(num_trials_gesamt):
     
     # Sammle die Antworten und Genauigkeit
     # Experimentteilnehmer:in
-    response_spieler2 = event.getKeys(keyList=['left', 'right', 'q'])
+    response_spieler2 = event.getKeys(keyList=['left_but', 'right_but', 'q'])
     # TODO: hier muss wohl der erste Eintrag von response_spieler2 geprüft werden
     # sonst kann man einfach immer links und rechts drücken und liegt immer richtig
+    # STIMMT
     print(response_spieler2) # just for debugging
     if response_spieler2:
-        if ('right' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
-           ('left' in response_spieler2 and left_picture in picture_files_36 and right_picture in picture_files_34):
+        if ('right_but' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
+           ('left_but' in response_spieler2 and left_picture in picture_files_36 and right_picture in picture_files_34):
             accuracy_sp2 = 1  # Correct response
             missing = 0
             feedback_text = "Richtig!"
@@ -560,9 +573,7 @@ for spieler_index in range(num_trials_gesamt):
     # Sortiere die Spieler nach ihrer Leistung absteigend
     sortierte_spieler = sorted(spieler_leistungen.items(), key=lambda x: x[1], reverse=True)
     
-    # TODO: Kommentar passt nicht...
-    # Müsste sein: Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind....
-    # Wenn alle Durchgänge abgeschlossen sind, zeige die Rangfolge der Spieler an
+    # Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind, zeige die Rangfolge der Spieler an
     if (spieler_index+1) % 4 == 0 and spieler_index > 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
         print('zeige die Rangfolge an...')
         first_name, first_leistung = sortierte_spieler[0]
