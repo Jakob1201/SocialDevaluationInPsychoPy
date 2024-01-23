@@ -223,7 +223,7 @@ for spieler_index in range(num_trials_uebung):
     # Experimentteilnehmer:in
     response_spieler2 = event.getKeys(keyList=['left', 'right', 'q'])
     # TODO: hier muss wohl der erste Eintrag von response_spieler2 geprüft werden
-    # sonst kann man einfach immer links und rechts drücken und liegt immer richtig
+    # sonst kann man einfach immer links und rechts drücken und liegt immer richtig  # Stimmt genau! Das hatte ich noch nie probiert.
     if response_spieler2:
         if ('right' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
            ('left' in response_spieler2 and left_picture in picture_files_36 and right_picture in picture_files_34):
@@ -282,7 +282,7 @@ for spieler_index in range(num_trials_uebung):
     else:
         spieler_accuracies[spieler_namen['spieler3']].append(accuracy_op)
 
-    # TODO: das hier könnte auch aus dem Loop über die num_trials_uebung raus oder?!
+    # TODO: das hier könnte auch aus dem Loop über die num_trials_uebung raus oder?!  #Ja könnte es.
     # Wenn alle Durchgänge abgeschlossen sind, zeige die Rangfolge der Spieler an
     if (spieler_index) == num_trials_uebung - 1:
         visual.TextStim(win=win, text="Die Übungsrunden sind abgeschlossen.\n Drücken Sie eine beliebige Taste um sich die Rangreihe anzeigen zu lassen.", color = (-1,-1,-1)).draw()
@@ -291,7 +291,7 @@ for spieler_index in range(num_trials_uebung):
             win.close()
             core.quit()
         
-        # TODO: ist es absicht, dass bei spieler2 der Faktor 2 fehlt?
+        # TODO: ist es absicht, dass bei spieler2 der Faktor 2 fehlt? # Ja, das ist absicht. spieler 2 spielt ja doppelt so viele Runden wie die die anderen Spieler.
         spieler_leistungen[spieler_namen['spieler1']] = round((sum(spieler_accuracies[spieler_namen['spieler1']])*2)/int(spieler_index+1)*100,2)
         spieler_leistungen[spieler_namen['spieler2']] = round((sum(spieler_accuracies[spieler_namen['spieler2']]))/int(spieler_index+1)*100,2)
         spieler_leistungen[spieler_namen['spieler3']] = round((sum(spieler_accuracies[spieler_namen['spieler3']])*2)/int(spieler_index+1)*100,2)
@@ -368,6 +368,7 @@ event.waitKeys(keyList=['s'])#auf den ersten puls des scanners warten. Der Puls 
 
 # TODO: soooooooooo viel Codedoppelung :( 
 # Das muss aufgeräumt werden....
+# Das stimmt vermutlich auch. Einige Variablen müssen für das "Hauptexperiment" neu initialisiert werden. Mit Funktionen definieren und dann sinnvoll einsetzen kenne ich mich leider nicht aus...
 
 # Auswahl der möglichen Bilder definieren
 available_34_pictures = list(picture_files_34)
@@ -469,6 +470,7 @@ for spieler_index in range(num_trials_gesamt):
     response_spieler2 = event.getKeys(keyList=['left', 'right', 'q'])
     # TODO: hier muss wohl der erste Eintrag von response_spieler2 geprüft werden
     # sonst kann man einfach immer links und rechts drücken und liegt immer richtig
+    # STIMMT
     print(response_spieler2) # just for debugging
     if response_spieler2:
         if ('right' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
@@ -566,9 +568,7 @@ for spieler_index in range(num_trials_gesamt):
     # Sortiere die Spieler nach ihrer Leistung absteigend
     sortierte_spieler = sorted(spieler_leistungen.items(), key=lambda x: x[1], reverse=True)
     
-    # TODO: Kommentar passt nicht...
-    # Müsste sein: Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind....
-    # Wenn alle Durchgänge abgeschlossen sind, zeige die Rangfolge der Spieler an
+    # Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind, zeige die Rangfolge der Spieler an
     if (spieler_index+1) % 4 == 0 and spieler_index > 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
         print('zeige die Rangfolge an...')
         first_name, first_leistung = sortierte_spieler[0]
