@@ -52,16 +52,15 @@ spieler_pic_size = [0.25, 0.5]
 sterne_size = [0.25, 0.1]
 thumb_size = [0.2, 0.35]
 background_color = [0.5, 0.5, 0.5]  # Background color as RGB tuple
-setting = 1 # 1 = ohne Scanner, 2 = mit Scanner
-left_but = 'left'
-right_but = 'right'
-
-if setting == 1:
-    left_but = 'left'
-    right_but = 'right'
-elif setting == 2:
+#setting = 1 # 1 = ohne Scanner, 2 = mit Scanner
+# ein boolean 'scanner' ist verständlicher als setting 1 oder 2
+scanner = False # oder eben True
+if scanner:
     left_but = 'b'
     right_but = 'c'
+else:
+    left_but = 'left'
+    right_but = 'right'
 #endregion
 
 #region - pictures
@@ -123,7 +122,7 @@ visual.TextStim(win=win,
     wrapWidth = 1.8
 ).draw()
 win.flip()
-if 'q' in event.waitKeys(keyList=["left_but", "right_but", "q"]): 
+if 'q' in event.waitKeys(keyList=[left_but, right_but, "q"]): 
     win.close()
     core.quit()  
 
@@ -141,11 +140,11 @@ while current_slide < len(instruktionsbilder):
         visual.TextStim(win=win, text="<- Zurück mit der linken Taste", pos=[-0.75,0.2],color=(0,0,5,1), height = 0.06).draw()
     win.flip()
 
-    keys = event.waitKeys(keyList=["left_but", "right_but", "q"])
+    keys = event.waitKeys(keyList=[left_but, right_but, "q"])
 
-    if "left_but" in keys and current_slide > 0:
+    if left_but in keys and current_slide > 0:
         current_slide -= 1
-    elif "right_but" in keys and current_slide <= len(instruktionsbilder) - 1:
+    elif right_but in keys and current_slide <= len(instruktionsbilder) - 1:
         current_slide += 1
     elif "q" in keys:
         win.close()
@@ -155,7 +154,7 @@ while current_slide < len(instruktionsbilder):
 #region - Übungsrunden
 visual.TextStim(win=win, text="Wenn Sie bereit sind in die Übungsrunden zu starten, drücken Sie eine der Tasten unter ihren Fingern.",color = (-1,-1,-1)).draw()
 win.flip()
-if "q" in event.waitKeys(keyList=["left_but", "right_but", "q"]):
+if "q" in event.waitKeys(keyList=[left_but, right_but, "q"]):
     win.close()
     core.quit()
 
@@ -292,7 +291,7 @@ for spieler_index in range(num_trials_uebung):
     if (spieler_index) == num_trials_uebung - 1:
         visual.TextStim(win=win, text="Die Übungsrunden sind abgeschlossen.\n Drücken Sie eine beliebige Taste um sich die Rangreihe anzeigen zu lassen.", color = (-1,-1,-1)).draw()
         win.flip()
-        if 'q' in event.waitKeys(keyList=["left_but", "right_but", "q"]):
+        if 'q' in event.waitKeys(keyList=[left_but, right_but, "q"]):
             win.close()
             core.quit()
         
@@ -347,7 +346,7 @@ for spieler_index in range(num_trials_uebung):
         third_leistung_stim.draw()
         win.flip()
         
-        if 'q' in event.waitKeys(keyList=["left_but", "right_but", "q"]):
+        if 'q' in event.waitKeys(keyList=[left_but, right_but, "q"]):
             win.close()
             core.quit()
 
