@@ -216,11 +216,11 @@ for spieler_index in range(num_trials_uebung):
     # Sammle die Antworten und Genauigkeit
     # Experimentteilnehmer:in
     response_spieler2 = event.getKeys(keyList=['left', 'right', 'q'])
-    # TODO: hier muss wohl der erste Eintrag von response_spieler2 geprüft werden
-    # sonst kann man einfach immer links und rechts drücken und liegt immer richtig
     if response_spieler2:
-        if ('right' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
-           ('left' in response_spieler2 and left_picture in picture_files_36 and right_picture in picture_files_34):
+        # if ('right' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
+        #    ('left' in response_spieler2 and left_picture in picture_files_36 and right_picture in picture_files_34):
+        dir = response_spieler2[0] # prüfe nur den ersten gedrückten Key
+        if (dir == 'right' and right_picture in picture_files_36) or (dir == 'left' and left_picture in picture_files_36):
             accuracy_sp2 = 1  # Correct response
             missing = 0
             feedback_text = "Richtig!"
