@@ -34,6 +34,8 @@ spieler_namen = {'spieler1': "Spieler 1",'spieler2': vorname, 'spieler3': "Spiel
 spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
 spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
 spieler_platzierungen = {spieler_namen[name]: 0 for name in spieler_namen}
+proband = spieler_namen['spieler2']
+vorherige_platzierung_sp2 = None # wird später in show_sorted_resulsts benötigt
 #endregion
 
 # Erstelle ein Fenster
@@ -67,6 +69,8 @@ else:
 # relative path to picture files (in img subfolder)
 picture_files_34 = ["img/34-dots-400x400.bmp"] + [f"img/34-dots-400x400({i}).bmp" for i in range(1,11)]
 picture_files_36 = ["img/36-dots-400x400.bmp"] + [f"img/36-dots-400x400({i}).bmp" for i in range(1,11)]
+
+last_left_picture = last_right_picture = None # wird später in get_rnd_picture benötigt
 
 spieler_bildpfade = {
     spieler_namen['spieler1']: "img/Dummy5_blau.bmp",
@@ -151,16 +155,15 @@ while current_slide < len(instruktionsbilder):
         core.quit()
 #endregion
 
-#region - Übungsrunden
-visual.TextStim(win=win, text="Wenn Sie bereit sind in die Übungsrunden zu starten, drücken Sie eine der Tasten unter ihren Fingern.",color = (-1,-1,-1)).draw()
-win.flip()
-if "q" in event.waitKeys(keyList=[left_but, right_but, "q"]):
-    win.close()
-    core.quit()
+#region - function definitions
+def check_q(acceptKeys):
+    if "q" in event.waitKeys(keyList=acceptKeys):
+        win.close()
+        core.quit()
 
-# Beginn der Trials
-last_left_picture = last_right_picture = None
-for spieler_index in range(num_trials_uebung):
+def get_rnd_picture():
+    global last_left_picture, last_right_picture
+
     if random.choice([True, False]): # Zufällige Auswahl aus den möglichen Bildern und zufällige Wahl der Position
         left_picture = random.choice([pic for pic in picture_files_34 if pic != last_left_picture])
         right_picture = random.choice([pic for pic in picture_files_36 if pic != last_right_picture])
@@ -171,28 +174,42 @@ for spieler_index in range(num_trials_uebung):
     last_left_picture = left_picture
     last_right_picture = right_picture
 
-    #Mitspieler festlegen # Vorlage für conditionals der Sterne und Positionen siehe Editordatei "Sterne und Positionszuordnung"
-    proband = spieler_namen['spieler2']
-    if spieler_index % 2 == 0: # alle geraden Runden: Proband rechts, computer links
-        opponent = spieler_namen['spieler1']
-        opponent_pic = spieler_bildpfade[opponent]
-        left_spieler_pic = spieler_bildpfade[opponent]
-        left_name = opponent
-        right_spieler_pic = spieler_bildpfade[proband]
+    return left_picture, right_picture
+
+def get_and_show_stimuli(trial_run=False):
+    #Mitspieler festlegen # Vorlage für conditionals der Sterne und Positionen siehe Editordatei "Sterne und Positionszuordnung"  
+    opponent = spieler_namen['spieler1'] if spieler_index % 2 == 0 else spieler_namen['spieler3']
+    opponent_pic = spieler_bildpfade[opponent]
+    opponent_stars = sterne_bildpfade[spieler_platzierungen[opponent]]
+    # using the global variable proband
+    proband_pic = spieler_bildpfade[proband]
+    proband_stars = sterne_bildpfade[spieler_platzierungen[proband]]
+    # are we in the trial run or the real experiment
+    condition = spieler_index % 2 == 0 if trial_run else spieler_platzierungen[proband] > spieler_platzierungen[opponent]
+
+    if condition: 
+        op_hier = 1 # für die Output-Datei
         right_name = proband
-    else: # Proband links, computer rechts
-        opponent = spieler_namen['spieler3']
-        opponent_pic = spieler_bildpfade[opponent]
-        left_spieler_pic = spieler_bildpfade[proband]
-        left_name = proband
-        right_spieler_pic = spieler_bildpfade[opponent]
+        right_spieler_pic = proband_pic
+        right_stars = proband_stars
+        left_name = opponent
+        left_spieler_pic = opponent_pic
+        left_stars = opponent_stars
+    else: 
+        op_hier = 0 # für die Output-Datei
         right_name = opponent
-    
-    # Stimuli erstellen
+        right_spieler_pic = opponent_pic
+        right_stars = opponent_stars
+        left_name = proband
+        left_spieler_pic = proband_pic
+        left_stars = proband_stars
+
+    # Stimuli erstellen 
     opponent_text_stim = visual.TextStim(win=win,text=f"Sie spielen mit {opponent}",color = (-1,-1,-1), pos=[0,0.5])
     opponent_pic_stim = visual.ImageStim(win=win,image=opponent_pic,size=spieler_pic_size,pos=[0,0])
+    opponent_stars_stim = visual.ImageStim(win=win,image=opponent_stars,size=sterne_size,pos=[0,-0.205])
     
-    left_stimulus = visual.ImageStim( win=win,image=left_picture,size=picture_size,pos=[-0.4, -0.3])  # Position auf der linken Seite
+    left_stimulus = visual.ImageStim(win=win,image=left_picture,size=picture_size,pos=[-0.4, -0.3])  # Position auf der linken Seite
     right_stimulus = visual.ImageStim(win=win,image=right_picture,size=picture_size,pos=[0.4, -0.3])  # Position auf der rechten Seite
     
     left_spieler_stim = visual.ImageStim(win=win,image=left_spieler_pic,size = spieler_pic_size,pos=[-0.4, 0.48])
@@ -201,15 +218,20 @@ for spieler_index in range(num_trials_uebung):
     left_name_stim = visual.TextStim(win=win,text=left_name,color = (-1,-1,-1), pos=[-0.4, 0.8])
     right_name_stim = visual.TextStim(win=win,text=right_name,color = (-1,-1,-1),pos=[0.4, 0.8])
 
+    left_sterne_stim = visual.ImageStim(win=win,image=left_stars,size=sterne_size,pos=[-0.4, 0.275])
+    right_sterne_stim = visual.ImageStim(win=win,image=right_stars,size=sterne_size,pos=[0.4, 0.275])
+
     # Präsentiere die Bilder
     for frame in range(int(1.5 * 60)):  # 60 Hz Bildwiederholfrequenz
         opponent_text_stim.draw()
         opponent_pic_stim.draw()
+        if not trial_run: opponent_stars_stim.draw()
         win.flip()
     
     for frame in range(int(1.5 * 60)):
         left_spieler_stim.draw()
         right_spieler_stim.draw()
+        if not trial_run: right_sterne_stim.draw(); left_sterne_stim.draw()
         left_name_stim.draw()
         right_name_stim.draw()
         win.flip()
@@ -219,16 +241,25 @@ for spieler_index in range(num_trials_uebung):
         right_stimulus.draw()
         left_spieler_stim.draw()
         right_spieler_stim.draw()
+        if not trial_run: right_sterne_stim.draw(); left_sterne_stim.draw()
         left_name_stim.draw()
         right_name_stim.draw()
         win.flip()
+
+    stimuli = {
+        'left_name_stim' : left_name_stim,
+        'left_spieler_stim' : left_spieler_stim,
+        'left_sterne_stim' : left_sterne_stim,
+        'right_name_stim' : right_name_stim,
+        'right_spieler_stim' : right_spieler_stim,
+        'right_sterne_stim' : right_sterne_stim
+    }
+    return opponent, left_name, stimuli
     
-    # Sammle die Antworten und Genauigkeit
-    # Experimentteilnehmer:in
+def get_and_show_feedback(trial_run=False):
+
     response_spieler2 = event.getKeys(keyList=[left_but, right_but, 'q'])
     if response_spieler2:
-        # if ('right' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
-        #    ('left' in response_spieler2 and left_picture in picture_files_36 and right_picture in picture_files_34):
         dir = response_spieler2[0] # prüfe nur den ersten gedrückten Key
         if (dir == right_but and right_picture in picture_files_36) or (dir == left_but and left_picture in picture_files_36):
             accuracy_sp2 = 1  # Correct response
@@ -258,7 +289,8 @@ for spieler_index in range(num_trials_uebung):
     accuracy_op = 1 if wuerfel_op < threshold else 0
 
     # Daumenstimuli zuordnen
-    if spieler_index % 2 == 0: # proband rechts
+    condition = spieler_index % 2 == 0 if trial_run else left_name == opponent
+    if condition: # proband rechts
         right_thumb = thumbup_pfad if accuracy_sp2 == 1 else thumbdown_pfad
         left_thumb = thumbup_pfad if accuracy_op == 1 else thumbdown_pfad
     else: #proband links
@@ -267,71 +299,69 @@ for spieler_index in range(num_trials_uebung):
     
     left_thumb_stim = visual.ImageStim(win=win,image = left_thumb,size = thumb_size,pos = [-0.7, 0.48])
     right_thumb_stim = visual.ImageStim(win=win,image= right_thumb,size = thumb_size,pos = [0.7, 0.48])
-    
+        
     # Zeige den Feedback-Bildschirm für eine kurze Dauer an (z. B. 1 Sekunde)
-    for frame in range(int(dur_feedback * 60)):  # 60 Hz Bildwiederholfrequenz für 1 Sekunde
+    for frame in range(int(dur_feedback * 60)):  # 60 Hz Bildwiederholfrequenz für 1,5 Sekunde
         feedback_text_stim.draw()
         left_thumb_stim.draw()
         right_thumb_stim.draw()
-        left_spieler_stim.draw()
-        right_spieler_stim.draw()
-        left_name_stim.draw()
-        right_name_stim.draw()
+        stimuli['left_spieler_stim'].draw()
+        stimuli['right_spieler_stim'].draw()
+        stimuli['left_name_stim'].draw()
+        stimuli['right_name_stim'].draw()
+        if not trial_run: stimuli['right_sterne_stim'].draw(); stimuli['left_sterne_stim'].draw()
         win.flip()
+
+    return accuracy_sp2, accuracy_op
+
+def get_sorted_results(round_number):
+    # Aktualisiere die Leistungen
+    # ist es absicht, dass bei spieler2 der Faktor 2 fehlt? # Ja, das ist absicht. spieler 2 spielt ja doppelt so viele Runden wie die die anderen Spieler.
+    spieler_leistungen[spieler_namen['spieler1']] = round((sum(spieler_accuracies[spieler_namen['spieler1']])*2)/int(round_number)*100,2)
+    spieler_leistungen[spieler_namen['spieler2']] = round((sum(spieler_accuracies[spieler_namen['spieler2']]))/int(round_number)*100,2)
+    spieler_leistungen[spieler_namen['spieler3']] = round((sum(spieler_accuracies[spieler_namen['spieler3']])*2)/int(round_number)*100,2)
+    # Sortiere die Spieler nach ihrer Leistung absteigend
+    return sorted(spieler_leistungen.items(), key=lambda x: x[1], reverse=True)
+
+def show_sorted_resulsts(trial_run=False):
+    global vorherige_platzierung_sp2
+
+    first_name, first_leistung = sortierte_spieler[0]
+    second_name, second_leistung = sortierte_spieler[1]
+    third_name, third_leistung = sortierte_spieler[2]
+    # Platzierungs-Dictionary füllen
+    for index, (spieler, leistung) in enumerate(sortierte_spieler):
+        spieler_platzierungen[spieler] = index
+
+    platzierung_sp2 = spieler_platzierungen[proband]
+    if not trial_run:
+        aktuelle_platzierung_sp2 = platzierung_sp2
+        vergleichs_variable = ""
+        if vorherige_platzierung_sp2 is not None:
+            if aktuelle_platzierung_sp2 < vorherige_platzierung_sp2:
+                vergleichs_variable = "Aufgestiegen" # In der Output-Datei nutzen
+            elif aktuelle_platzierung_sp2 > vorherige_platzierung_sp2:
+                vergleichs_variable = "Abgestiegen" # In der Output-Datei nutzen
+
+        vorherige_platzierung_sp2 = aktuelle_platzierung_sp2
+        vergleichs_stim = visual.TextStim(win=win, text=vergleichs_variable, color = (-1,-1,-1), pos=[-0.6, -0.6])
     
-    # Füge die Antwort und die Genauigkeit zur Liste der Spieler hinzu
-    spieler_accuracies[spieler_namen['spieler2']].append(accuracy_sp2)
-    if spieler_index % 2 == 0:
-        spieler_accuracies[spieler_namen['spieler1']].append(accuracy_op)
-    else:
-        spieler_accuracies[spieler_namen['spieler3']].append(accuracy_op)
-
-    # TODO: das hier könnte auch aus dem Loop über die num_trials_uebung raus oder?!  #Ja könnte es.
-    # Wenn alle Durchgänge abgeschlossen sind, zeige die Rangfolge der Spieler an
-    if (spieler_index) == num_trials_uebung - 1:
-        visual.TextStim(win=win, text="Die Übungsrunden sind abgeschlossen.\n Drücken Sie eine beliebige Taste um sich die Rangreihe anzeigen zu lassen.", color = (-1,-1,-1)).draw()
-        win.flip()
-        if 'q' in event.waitKeys(keyList=[left_but, right_but, "q"]):
-            win.close()
-            core.quit()
-        
-        # TODO: ist es absicht, dass bei spieler2 der Faktor 2 fehlt? # Ja, das ist absicht. spieler 2 spielt ja doppelt so viele Runden wie die die anderen Spieler.
-        spieler_leistungen[spieler_namen['spieler1']] = round((sum(spieler_accuracies[spieler_namen['spieler1']])*2)/int(spieler_index+1)*100,2)
-        spieler_leistungen[spieler_namen['spieler2']] = round((sum(spieler_accuracies[spieler_namen['spieler2']]))/int(spieler_index+1)*100,2)
-        spieler_leistungen[spieler_namen['spieler3']] = round((sum(spieler_accuracies[spieler_namen['spieler3']])*2)/int(spieler_index+1)*100,2)
-        
-        # Sortiere die Spieler nach ihrer Leistung absteigend
-        sortierte_spieler = sorted(spieler_leistungen.items(), key=lambda x: x[1], reverse=True)
-        first_name, first_leistung = sortierte_spieler[0]
-        second_name, second_leistung = sortierte_spieler[1]
-        third_name, third_leistung = sortierte_spieler[2]
-        
-        # Platzierungs-Dictionary füllen
-        for index, (spieler, leistung) in enumerate(sortierte_spieler):
-            if spieler == spieler_namen['spieler1']:
-                spieler_platzierungen[spieler_namen['spieler1']] = index
-            elif spieler == spieler_namen['spieler2']:
-                spieler_platzierungen[spieler_namen['spieler2']] = index
-            elif spieler == spieler_namen['spieler3']:
-                spieler_platzierungen[spieler_namen['spieler3']] = index
-        
-        vorherige_platzierung_sp2 = spieler_platzierungen[spieler_namen['spieler2']]
-
-        first_name_stim = visual.TextStim(win=win,text = first_name, color = (-1,-1,-1), pos=[-0.6,0.83])
-        first_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[first_name], size= spieler_pic_size, pos=[-0.6, 0.5])
-        first_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[0], size= sterne_size, pos=[-0.6, 0.3])
-        first_leistung_stim = visual.TextStim(win=win,text = f"{first_leistung}%", color = (-1,-1,-1), pos=[-0.6,0.2])
-        
-        second_name_stim = visual.TextStim(win=win,text = second_name, color = (-1,-1,-1), pos=[0,0.33])
-        second_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[second_name], size= spieler_pic_size, pos=[0, 0])
-        second_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[1], size= sterne_size, pos=[0, -0.2])
-        second_leistung_stim = visual.TextStim(win=win,text = f"{second_leistung}%", color = (-1,-1,-1), pos=[0,-0.3])
-        
-        third_name_stim = visual.TextStim(win=win,text = third_name, color = (-1,-1,-1), pos=[0.6,-0.17])
-        third_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[third_name], size= spieler_pic_size, pos=[0.6, -0.5])
-        third_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[2], size= sterne_size, pos=[0.6, -0.7])
-        third_leistung_stim = visual.TextStim(win=win,text = f"{third_leistung}%", color = (-1,-1,-1), pos=[0.6,-0.8])
-        
+    first_name_stim = visual.TextStim(win=win,text = first_name, color = (-1,-1,-1), pos=[-0.6,0.83])
+    first_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[first_name], size= spieler_pic_size, pos=[-0.6, 0.5])
+    first_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[0], size= sterne_size, pos=[-0.6, 0.3])
+    first_leistung_stim = visual.TextStim(win=win,text = f"{first_leistung}%", color = (-1,-1,-1), pos=[-0.6,0.2])
+    
+    second_name_stim = visual.TextStim(win=win,text = second_name, color = (-1,-1,-1), pos=[0,0.33])
+    second_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[second_name], size= spieler_pic_size, pos=[0, 0])
+    second_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[1], size= sterne_size, pos=[0, -0.2])
+    second_leistung_stim = visual.TextStim(win=win,text = f"{second_leistung}%", color = (-1,-1,-1), pos=[0,-0.3])
+    
+    third_name_stim = visual.TextStim(win=win,text = third_name, color = (-1,-1,-1), pos=[0.6,-0.17])
+    third_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[third_name], size= spieler_pic_size, pos=[0.6, -0.5])
+    third_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[2], size= sterne_size, pos=[0.6, -0.7])
+    third_leistung_stim = visual.TextStim(win=win,text = f"{third_leistung}%", color = (-1,-1,-1), pos=[0.6,-0.8])
+    
+    for frame in range(int(dur_hierarchie * 60)):  # 60 Hz Bildwiederholfrequenz für 5 Sekunde
         first_name_stim.draw()
         first_picture_stim.draw()
         first_stars_stim.draw()
@@ -344,24 +374,43 @@ for spieler_index in range(num_trials_uebung):
         third_picture_stim.draw()
         third_stars_stim.draw()
         third_leistung_stim.draw()
+        if not trial_run: vergleichs_stim.draw()
         win.flip()
-        
-        if 'q' in event.waitKeys(keyList=[left_but, right_but, "q"]):
-            win.close()
-            core.quit()
+#endregion - function definitions
 
+#region - Übungsrunden
+visual.TextStim(win=win, text="Wenn Sie bereit sind in die Übungsrunden zu starten, drücken Sie eine der Tasten unter ihren Fingern.",color = (-1,-1,-1)).draw()
+win.flip()
+check_q([left_but, right_but, "q"])
+
+print('BEGINN der Übungsrunden ...')
+for spieler_index in range(num_trials_uebung):
+    print(f"beginne Übungsrunde {spieler_index+1} von {num_trials_uebung}")
+    left_picture, right_picture = get_rnd_picture()
+    opponent, left_name, stimuli = get_and_show_stimuli(True) # arg = True, weil wir in den Übungsrunden sind
+    accuracy_sp2, accuracy_op = get_and_show_feedback(True)
+
+    spieler_accuracies[proband].append(accuracy_sp2)
+    spieler_accuracies[opponent].append(accuracy_op)
+    print(f"\taccuracis vom Probanden: {spieler_accuracies[proband]}")
+    print(f"\taccuracis vom Computer ({opponent}): {spieler_accuracies[opponent]}")
+
+visual.TextStim(win=win, text="Die Übungsrunden sind abgeschlossen.\n Drücken Sie eine beliebige Taste um sich die Rangreihe anzeigen zu lassen.", color = (-1,-1,-1)).draw()
+win.flip()
+check_q([left_but, right_but, "q"])
+
+# Sortiere die Spieler nach ihrer Leistung absteigend
+sortierte_spieler = get_sorted_results(num_trials_uebung)
+print(f"sortierte Spieler: {sortierte_spieler}")
+show_sorted_resulsts(True)
+check_q([left_but, right_but, "q"])
+print('ENDE der Übungsrunden ...')
 #endregion - Übungsrunden
             
 #region - richtiges Experiment
-visual.TextStim(
-    win=win,
-    text=f"Nun beginnt das eigentliche Spiel.\n\n Warten Sie bitte bis der Versuchleiter das Spiel startet.",
-    color = (-1,-1,-1) # Black color as RGB tuple
-).draw()
+visual.TextStim(win=win,text=f"Nun beginnt das eigentliche Spiel.\n\n Warten Sie bitte bis der Versuchleiter das Spiel startet.",color = (-1,-1,-1)).draw()
 win.flip()
-if 'q' in event.waitKeys(keyList=['space', 'q']): # Warten Sie auf die Leertaste, um das Experiment zu starten
-    win.close()
-    core.quit()  
+check_q(['space', 'q']) # Warten Sie auf die Leertaste, um das Experiment zu starten
 
 # Auf den ersten Puls des Scanners warten
 visual.TextStim(win=win,text=f"Warten auf Signal des Scanners...",color=(-1,-1,-1)).draw()
@@ -370,278 +419,37 @@ core.wait(1)
 #hardware.emulator.launchScan(win=win, TR=2, volumes=200, sync='s',globalClock=True, simResponses=True, mode='Test')# 
 event.waitKeys(keyList=['s'])#auf den ersten puls des scanners warten. Der Puls wird von der Stimulus Box als 's' weitergeleitet.
 
-# TODO: soooooooooo viel Codedoppelung :( 
-# Das muss aufgeräumt werden....
-# Das stimmt vermutlich auch. Einige Variablen müssen für das "Hauptexperiment" neu initialisiert werden. Mit Funktionen definieren und dann sinnvoll einsetzen kenne ich mich leider nicht aus...
-
-# Auswahl der möglichen Bilder definieren
-available_34_pictures = list(picture_files_34)
-available_36_pictures = list(picture_files_36)
-
-last_left_picture = None
-last_right_picture = None
-
 # Accuracies und Leistungen neu initialisieren
 spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
 spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
 
 # Beginn der Trials
+print('BEGINN des richtigen Experiments ...')
 for spieler_index in range(num_trials_gesamt):
-    print(f"beginne Trial {spieler_index} von {num_trials_gesamt}...")
-    if random.choice([True, False]): # Zufällige Auswahl aus den möglichen Bildern und zufällige Wahl der Position
-        left_picture = random.choice([pic for pic in available_34_pictures if pic != last_left_picture])
-        right_picture = random.choice([pic for pic in available_36_pictures if pic != last_right_picture])
-    else:
-        left_picture = random.choice([pic for pic in available_36_pictures if pic != last_right_picture])
-        right_picture = random.choice([pic for pic in available_34_pictures if pic != last_left_picture])
-    
-    #Setzen der "last pictures" für den nächsten Durchgang
-    last_left_picture = left_picture
-    last_right_picture = right_picture
-   
-   #Mitspieler festlegen # Vorlage für conditionals der Sterne und Positionen siehe Editordatei "Sterne und Positionszuordnung"  
-    if spieler_index % 2 == 0:
-        opponent = spieler_namen['spieler1']
-    else:
-        opponent = spieler_namen['spieler3']
-
-    opponent_pic = spieler_bildpfade[opponent]
-    opponent_stars = sterne_bildpfade[spieler_platzierungen[opponent]]
-
-    if spieler_platzierungen[spieler_namen['spieler2']] > spieler_platzierungen[opponent]:
-        op_hier = 1 # für die Output-Datei
-        left_spieler_pic = opponent_pic
-        left_stars = opponent_stars
-        left_name = opponent
-        right_spieler_pic = spieler_bildpfade[spieler_namen['spieler2']]
-        right_stars = sterne_bildpfade[spieler_platzierungen[spieler_namen['spieler2']]]
-        right_name = spieler_namen['spieler2']
-    else:
-        op_hier = 0 # für die Output-Datei
-        left_spieler_pic = spieler_bildpfade[spieler_namen['spieler2']]
-        left_stars = sterne_bildpfade[spieler_platzierungen[spieler_namen['spieler2']]]
-        left_name = right_name = spieler_namen['spieler2']
-        right_spieler_pic = opponent_pic
-        right_stars = opponent_stars
-        right_name = opponent
-
-    # Stimuli erstellen
-    opponent_text_stim = visual.TextStim(win=win,text=f"Sie spielen mit {opponent}",color = (-1,-1,-1), pos=[0,0.5])
-    opponent_pic_stim = visual.ImageStim(win=win,image=opponent_pic,size=spieler_pic_size,pos=[0,0])
-    opponent_stars_stim = visual.ImageStim(win=win,image=opponent_stars,size=sterne_size,pos=[0,-0.205])
-    
-    left_stimulus = visual.ImageStim(win=win,image=left_picture,size=picture_size,pos=[-0.4, -0.3])
-    right_stimulus = visual.ImageStim(win=win,image=right_picture,size=picture_size,pos=[0.4, -0.3])
-    
-    left_spieler_stim = visual.ImageStim(win=win,image=left_spieler_pic,size = spieler_pic_size,pos=[-0.4, 0.48])
-    right_spieler_stim = visual.ImageStim(win=win,image=right_spieler_pic,size = spieler_pic_size,pos=[0.4, 0.48])
-    
-    left_sterne_stim = visual.ImageStim(win=win,image=left_stars,size=sterne_size,pos=[-0.4, 0.275])
-    right_sterne_stim = visual.ImageStim(win=win,image=right_stars,size = sterne_size,pos=[0.4, 0.275])
-    
-    left_name_stim = visual.TextStim(win=win,text=left_name,color = (-1,-1,-1),pos=[-0.4, 0.8])
-    right_name_stim = visual.TextStim(win=win,text=right_name,color = (-1,-1,-1),pos=[0.4, 0.8])
-
-    # Präsentiere die Bilder
-    for frame in range(int(1.5 * 60)):  # 60 Hz Bildwiederholfrequenz
-        opponent_text_stim.draw()
-        opponent_pic_stim.draw()
-        opponent_stars_stim.draw()
-        win.flip()
-    
-    for frame in range(int(1.5 * 60)):
-        left_spieler_stim.draw()
-        right_spieler_stim.draw()
-        right_sterne_stim.draw()
-        left_sterne_stim.draw()
-        left_name_stim.draw()
-        right_name_stim.draw()
-        win.flip()
-    
-    for frame in range(int(trial_duration * 60)):  # 60 Hz Bildwiederholfrequenz
-        left_stimulus.draw()
-        right_stimulus.draw()
-        left_spieler_stim.draw()
-        right_spieler_stim.draw()
-        right_sterne_stim.draw()
-        left_sterne_stim.draw()
-        left_name_stim.draw()
-        right_name_stim.draw()
-        win.flip()
-    
-    # Sammle die Antworten und Genauigkeit
-    # Experimentteilnehmer:in
-    response_spieler2 = event.getKeys(keyList=['left_but', 'right_but', 'q'])
-    # TODO: hier muss wohl der erste Eintrag von response_spieler2 geprüft werden
-    # sonst kann man einfach immer links und rechts drücken und liegt immer richtig
-    # STIMMT
-    print(response_spieler2) # just for debugging
-    if response_spieler2:
-        if ('right_but' in response_spieler2 and left_picture in picture_files_34 and right_picture in picture_files_36) or \
-           ('left_but' in response_spieler2 and left_picture in picture_files_36 and right_picture in picture_files_34):
-            accuracy_sp2 = 1  # Correct response
-            missing = 0
-            feedback_text = "Richtig!"
-            feedback_color = (0, 1, 0)
-        else:
-            accuracy_sp2 = 0  # Incorrect response
-            missing = 0
-            feedback_text = "Falsch!"
-            feedback_color = (1, 0, 0)
-    else:
-        accuracy_sp2 = 0  # No response #-1??
-        missing = 1
-        feedback_text = "Zu langsam!"
-        feedback_color = (1, 0, 0)
-    # Überprüfe die 'q'-Taste, um das Experiment zu beenden
-    if 'q' in response_spieler2:
-        win.close()
-        core.quit()  # Beendet das Experiment
-    
-    feedback_text_stim = visual.TextStim(win=win,text = feedback_text,color= feedback_color,pos = [0,-0.2])
-
-    # Gegenspieler
-    wuerfel_op = random.randint(1, 100)
-    if spieler_index % 2 == 0: #opponent = spieler1
-        if wuerfel_op < 81:
-            accuracy_op = 1
-        else:
-            accuracy_op = 0
-    else:
-        if wuerfel_op < 41:
-            accuracy_op = 1
-        else:
-            accuracy_op = 0
-
-    # Daumenstimuli zuordnen
-    if left_name == opponent:
-        if accuracy_sp2 == 1 and accuracy_op == 1:
-            right_thumb = thumbup_pfad
-            left_thumb = thumbup_pfad
-        elif accuracy_sp2 == 1 and accuracy_op == 0:
-            right_thumb = thumbup_pfad
-            left_thumb = thumbdown_pfad
-        elif accuracy_sp2 == 0 and accuracy_op == 0:
-            right_thumb = thumbdown_pfad
-            left_thumb = thumbdown_pfad
-        elif accuracy_sp2 == 0 and accuracy_op == 1:
-            right_thumb = thumbdown_pfad
-            left_thumb = thumbup_pfad
-    elif right_name == opponent:
-        if accuracy_sp2 == 1 and accuracy_op == 1:
-            right_thumb = thumbup_pfad
-            left_thumb = thumbup_pfad
-        elif accuracy_sp2 == 1 and accuracy_op == 0:
-            right_thumb = thumbdown_pfad
-            left_thumb = thumbup_pfad
-        elif accuracy_sp2 == 0 and accuracy_op == 0:
-            right_thumb = thumbdown_pfad
-            left_thumb = thumbdown_pfad
-        elif accuracy_sp2 == 0 and accuracy_op == 1:
-            right_thumb = thumbup_pfad
-            left_thumb = thumbdown_pfad
-    
-    left_thumb_stim = visual.ImageStim(win=win,image = left_thumb,size = thumb_size,pos = [-0.7, 0.48])
-    right_thumb_stim = visual.ImageStim(win=win,image= right_thumb,size = thumb_size,pos = [0.7, 0.48])
-    
-    # Zeige den Feedback-Bildschirm für eine kurze Dauer an (z. B. 1 Sekunde)
-    print('Zeige Feedback Bildschirm')
-    for frame in range(int(dur_feedback * 60)):  # 60 Hz Bildwiederholfrequenz für 1,5 Sekunde
-        feedback_text_stim.draw()
-        left_thumb_stim.draw()
-        right_thumb_stim.draw()
-        left_spieler_stim.draw()
-        right_spieler_stim.draw()
-        right_sterne_stim.draw()
-        left_sterne_stim.draw()
-        left_name_stim.draw()
-        right_name_stim.draw()
-        win.flip()
+    print(f"beginne Trial {spieler_index+1} von {num_trials_gesamt}...")
+    left_picture, right_picture = get_rnd_picture()
+    opponent, left_name, stimuli = get_and_show_stimuli() # kein argument benötigt, da per Default die Stimuli des richtigen Experiments gezeigt werden
+    accuracy_sp2, accuracy_op = get_and_show_feedback()
     
     # Füge die Antwort und die Genauigkeit zur Liste der Spieler hinzu
-    spieler_accuracies[spieler_namen['spieler2']].append(accuracy_sp2)
-    if spieler_index % 2 == 0:
-        spieler_accuracies[spieler_namen['spieler1']].append(accuracy_op)
-    else:
-        spieler_accuracies[spieler_namen['spieler3']].append(accuracy_op)
-    
-    # Aktualisiere die Leistungen
-    spieler_leistungen[spieler_namen['spieler1']] = round((sum(spieler_accuracies[spieler_namen['spieler1']])*2)/int(spieler_index+1)*100,2)
-    spieler_leistungen[spieler_namen['spieler2']] = round((sum(spieler_accuracies[spieler_namen['spieler2']]))/int(spieler_index+1)*100,2)
-    spieler_leistungen[spieler_namen['spieler3']] = round((sum(spieler_accuracies[spieler_namen['spieler3']])*2)/int(spieler_index+1)*100,2)
-    # Sortiere die Spieler nach ihrer Leistung absteigend
-    sortierte_spieler = sorted(spieler_leistungen.items(), key=lambda x: x[1], reverse=True)
-    
+    spieler_accuracies[proband].append(accuracy_sp2)
+    spieler_accuracies[opponent].append(accuracy_op)
+    print(f"\taccuracis vom Probanden: {spieler_accuracies[proband]}")
+    print(f"\taccuracis vom Computer ({opponent}): {spieler_accuracies[opponent]}")
+
     # Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind, zeige die Rangfolge der Spieler an
-    if (spieler_index+1) % 4 == 0 and spieler_index > 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
-        print('zeige die Rangfolge an...')
-        first_name, first_leistung = sortierte_spieler[0]
-        second_name, second_leistung = sortierte_spieler[1]
-        third_name, third_leistung = sortierte_spieler[2]
-        # Platzierungs-Dictionary füllen
-        for index, (spieler, leistung) in enumerate(sortierte_spieler):
-            if spieler == spieler_namen['spieler1']:
-                spieler_platzierungen[spieler_namen['spieler1']] = index
-            elif spieler == spieler_namen['spieler2']:
-                spieler_platzierungen[spieler_namen['spieler2']] = index
-            elif spieler == spieler_namen['spieler3']:
-                spieler_platzierungen[spieler_namen['spieler3']] = index
-        
-        aktuelle_platzierung_sp2 = spieler_platzierungen[spieler_namen['spieler2']]
+    if (spieler_index+1) % 4 == 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
+        sortierte_spieler = get_sorted_results(spieler_index+1)
+        print(f"\tsortierte Spieler: {sortierte_spieler}")
+        show_sorted_resulsts()
 
-        if aktuelle_platzierung_sp2 < vorherige_platzierung_sp2:
-            vergleichs_variable = "Aufgestiegen" # In der Output-Datei nutzen
-        elif aktuelle_platzierung_sp2 > vorherige_platzierung_sp2:
-            vergleichs_variable = "Abgestiegen" # In der Output-Datei nutzen
-        else:
-            vergleichs_variable = "" # In der Output-Datei nutzen
-    
-        vorherige_platzierung_sp2 = aktuelle_platzierung_sp2
-        
-        vergleichs_stim = visual.TextStim(win=win, text=vergleichs_variable, color = (-1,-1,-1), pos=[-0.6, -0.6])
-        
-        first_name_stim = visual.TextStim(win=win,text = first_name, color = (-1,-1,-1), pos=[-0.6,0.83])
-        first_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[first_name], size= spieler_pic_size, pos=[-0.6, 0.5])
-        first_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[0], size= sterne_size, pos=[-0.6, 0.3])
-        first_leistung_stim = visual.TextStim(win=win,text = f"{first_leistung}%", color = (-1,-1,-1), pos=[-0.6,0.2])
-        
-        second_name_stim = visual.TextStim(win=win,text = second_name, color = (-1,-1,-1), pos=[0,0.33])
-        second_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[second_name], size= spieler_pic_size, pos=[0, 0])
-        second_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[1], size= sterne_size, pos=[0, -0.2])
-        second_leistung_stim = visual.TextStim(win=win,text = f"{second_leistung}%", color = (-1,-1,-1), pos=[0,-0.3])
-        
-        third_name_stim = visual.TextStim(win=win,text = third_name, color = (-1,-1,-1), pos=[0.6,-0.17])
-        third_picture_stim = visual.ImageStim(win=win, image= spieler_bildpfade[third_name], size= spieler_pic_size, pos=[0.6, -0.5])
-        third_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[2], size= sterne_size, pos=[0.6, -0.7])
-        third_leistung_stim = visual.TextStim(win=win,text = f"{third_leistung}%", color = (-1,-1,-1), pos=[0.6,-0.8])
-        
-        for frame in range(int(dur_hierarchie * 60)):  # 60 Hz Bildwiederholfrequenz für 5 Sekunde
-            first_name_stim.draw()
-            first_picture_stim.draw()
-            first_stars_stim.draw()
-            first_leistung_stim.draw()
-            second_name_stim.draw()
-            second_picture_stim.draw()
-            second_stars_stim.draw()
-            second_leistung_stim.draw()
-            third_name_stim.draw()
-            third_picture_stim.draw()
-            third_stars_stim.draw()
-            third_leistung_stim.draw()
-            vergleichs_stim.draw()
-            win.flip()
+print('ENDE des richtigen Experiments ...')
 
-# Zeige die Nachricht für die Teilnehmer an
-wartungs_text = visual.TextStim(
-    win=win,
-    text="Vielen Dank für ihre Teilnahme! \n\n Bitte warten Sie, bis der Versuchsleiter das Spiel beendet.",
-    color = (-1,-1,-1) # Schwarze Farbe für den Text (RGB-Tupel)
-)
+wartungs_text = visual.TextStim(win=win,text="Vielen Dank für ihre Teilnahme! \n\n Bitte warten Sie, bis der Versuchsleiter das Spiel beendet.",color = (-1,-1,-1))
 wartungs_text.draw()
 win.flip()
 
-# Beende das Experiment mit q
-event.waitKeys(keyList=['q'])
+event.waitKeys(keyList=['q']) # Beende das Experiment mit q
 win.close()
 core.quit()
 #endregion - richtiges Experiment
