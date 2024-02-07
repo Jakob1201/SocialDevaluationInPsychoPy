@@ -183,13 +183,7 @@ event.globalKeys.add(key='s', func=save_data(time = clock.getTime(),event='pulse
 
 #region - function definitions
 #setup fixation_cross
-fix_cross = visual.ShapeStim(
-    win=win, name='polygon', vertices='cross',
-    size=(0.5, 0.5),
-    ori=0.0, pos=(0, 0), anchor='center',
-    lineWidth=0.1,     colorSpace='rgb',  lineColor='black', fillColor='black',
-    opacity=None, depth=0.0, interpolate=True
-)
+fix_cross = visual.TextStim(win=win, text="+", pos=[0,0], color='black', height = 0.4)
 
 def check_q(acceptKeys):
     clock = core.Clock()
@@ -429,6 +423,10 @@ visual.TextStim(win=win, text="Wenn Sie bereit sind in die Übungsrunden zu star
 win.flip()
 check_q([left_but, right_but, "q"])
 
+for frame in range(int(5 * 60)):  # 60 Hz Bildwiederholfrequenz für 15 Sekunden
+        fix_cross.draw()
+        win.flip()
+
 print('BEGINN der Übungsrunden ...')
 for spieler_index in range(num_trials_uebung):
     print(f"beginne Übungsrunde {spieler_index+1} von {num_trials_uebung}")
@@ -504,14 +502,18 @@ for spieler_index in range(num_trials_gesamt):
 
 print('ENDE des richtigen Experiments ...')
 
-# Save data
-#trials.saveAsWideText(filename_exp_data, delim=',', appendFile=False, fileCollisionMethod='overwrite')
-df = pd.DataFrame(trial_data)
-df.to_csv(filename_trial_data)
+for frame in range(int(15 * 60)):  # 60 Hz Bildwiederholfrequenz für 15 Sekunden
+        fix_cross.draw()
+        win.flip()
 
 wartungs_text = visual.TextStim(win=win,text="Vielen Dank für ihre Teilnahme! \n\n Bitte warten Sie, bis der Versuchsleiter das Spiel beendet.",color = (-1,-1,-1))
 wartungs_text.draw()
 win.flip()
+
+# Save data
+#trials.saveAsWideText(filename_exp_data, delim=',', appendFile=False, fileCollisionMethod='overwrite')
+df = pd.DataFrame(trial_data)
+df.to_csv(filename_trial_data)
 
 event.waitKeys(keyList=['q']) # Beende das Experiment mit q
 win.close()
