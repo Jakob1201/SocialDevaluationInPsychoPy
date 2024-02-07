@@ -153,94 +153,32 @@ filename_trial_data = os.path.join(data_path, f"{date}_{participant_id}_{run_num
 
 trial_data = []
 
-def save_data_event1 ():
+def save_data(time, event, opponent, op_hier, left_picture, right_picture, missing, response_sp2, accuracy_sp2, accuracy_op, Hier_rel, Rank, Rank_change):
     dict = {
-        'Proband_in' : participant_id,
+    'Proband_in' : participant_id,
         'Date' : date,
-        'Time' : time_ev1, # get_and_show_stimuli: time_ev1 = core.Clock.getTime()
-        'Event' : 'gegenueberstellung',
+        'Time' : time, 
+        'Event' : event,
         'round_no' : spieler_index+1,
-        'Opponent' : opponent,  # get_and_show_stimuli
-        'Op_Hier' : op_hier,  # get_and_show_stimuli
-        'linkesBild' : left_picture,  # get_rnd_picture
-        'rechtesBild' : right_picture,  # get_rnd_picture
-        'check_missing' : '',
-        'response_sp2' : '',
-        'accuracy_sp2' : '', 
-        'accuracy_op' : '',
-        'Hier.rel' : '',
-        'Rank' : platzierung_sp2, #show_sorted_results
-        'Rank_change' : vergleichs_variable, #show_sorted_results
-    }
-    trial_data.append(dict)
-
-def save_data_event2 ():
-    dict = {
-        'Proband_in' : participant_id,
-        'Date' : date,
-        'Time' : time_ev2, #get_and_show_feedback: time_ev2 = core.Clock.getTime()
-        'Event' : 'trial_feedback',
-        'round_no' : spieler_index+1,
-        'Opponent' : opponent,  # get_and_show_stimuli
-        'Op_Hier' : op_hier,  # get_and_show_stimuli
-        'linkesBild' : '',  
-        'rechtesBild' : '', 
-        'check_missing' : missing, #get_and_show_feedback
-        'response_sp2' : response_spieler2, # get_and_show_feedback
-        'accuracy_sp2' : accuracy_sp2, # get_and_show_feedback
-        'accuracy_op' : accuracy_op, # get_and_show_feedback
-        'Hier.rel' : [str(op_hier)+str(accuracy_sp2)+str(accuracy_op)],
-        'Rank' : platzierung_sp2, #show_sorted_results
-        'Rank_change' : '', 
-    }
-    trial_data.append(dict)
-
-def save_data_event3 ():
-    dict = {
-        'Proband_in' : participant_id,
-        'Date' : date,
-        'Time' : time_ev3, # show_sorted_results: time_ev3 = core.Clock.getTime()
-        'Event' : 'rank_feedback',
-        'round_no' : spieler_index+1,
-        'Opponent' : '',
-        'Op_Hier' : '',
-        'linkesBild' : '',  
-        'rechtesBild' : '',  
-        'check_missing' : '',
-        'response_sp2' : '',
-        'accuracy_sp2' : '', 
-        'accuracy_op' : '',
-        'Hier.rel' : '',
-        'Rank' : platzierung_sp2, #show_sorted_results
-        'Rank_change' : vergleichs_variable, #show_sorted_results
+        'Opponent' : opponent,
+        'Op_Hier' : op_hier,
+        'linkesBild' : left_picture, 
+        'rechtesBild' : right_picture,  
+        'check_missing' : missing,
+        'response_sp2' : response_sp2,
+        'accuracy_sp2' : accuracy_sp2, 
+        'accuracy_op' : accuracy_op,
+        'Hier.rel' : Hier_rel,
+        'Rank' : Rank, 
+        'Rank_change' : Rank_change, 
     }
     trial_data.append(dict)
     
-
-def save_data_pulse ():
-    time_pulse = clock.getTime()
-    dict = {
-        'Proband_in' : participant_id,
-        'Date' : date,
-        'Time' : time_pulse, #pulse
-        'Event' : 'pulse',
-        'round_no' : spieler_index+1,
-        'Opponent' : '',
-        'Op_Hier' : '',
-        'linkesBild' : '',  
-        'rechtesBild' : '',  
-        'check_missing' : '',
-        'response_sp2' : '',
-        'accuracy_sp2' : '', 
-        'accuracy_op' : '',
-        'Hier.rel' : '',
-        'Rank' : '', 
-        'Rank_change' : '', 
-    }
-    trial_data.append(dict)
+spieler_index = 0
 
 event.globalKeys.clear()
-event.globalKeys.add(key='s', func=save_data_pulse, name = 'scannerpulse')
+event.globalKeys.add(key='s', func=save_data(time = clock.getTime(),event='pulse', opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank='', Rank_change=''), name = 'scannerpulse')
+
 #endregion
 
 #region - function definitions
@@ -511,7 +449,7 @@ check_q([left_but, right_but, "q"])
 sortierte_spieler = get_sorted_results(num_trials_uebung)
 print(f"sortierte Spieler: {sortierte_spieler}")
 time_ev3, platzierung_sp2, vergleichs_variable = show_sorted_resulsts(True)
-save_data_event3()
+save_data(time = time_ev3,event = 'rank_feedback_uebungsrunden',opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
 vorherige_platzierung_sp2 = platzierung_sp2
 #check_q([left_but, right_but, "q"])
 print('ENDE der Übungsrunden ...')
@@ -527,7 +465,13 @@ visual.TextStim(win=win,text=f"Warten auf Signal des Scanners...",color=(-1,-1,-
 win.flip()
 core.wait(1)
 #hardware.emulator.launchScan(win=win, TR=2, volumes=200, sync='s',globalClock=True, simResponses=True, mode='Test')# 
-event.waitKeys(keyList=['s'])#auf den ersten puls des scanners warten. Der Puls wird von der Stimulus Box als 's' weitergeleitet.
+#event.waitKeys(keyList=['s'])#auf den ersten puls des scanners warten. Der Puls wird von der Stimulus Box als 's' weitergeleitet.
+pulse_counter = 0
+while pulse_counter < 5:
+    pulse = event.waitKeys(keyList=['s'])
+    if pulse:
+        pulse_counter+=1
+
 
 # Accuracies und Leistungen neu initialisieren
 spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
@@ -536,13 +480,14 @@ spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
 clock.reset()
 # Beginn der Trials
 print('BEGINN des richtigen Experiments ...')
+## WIE KANN ICH HIER MIT EINER WHILE-SCHLEIFE "PULSE" SPEICHERN??
 for spieler_index in range(num_trials_gesamt):
     print(f"beginne Trial {spieler_index+1} von {num_trials_gesamt}...")
     left_picture, right_picture = get_rnd_picture()
     time_ev1, opponent, op_hier, left_name, stimuli = get_and_show_stimuli() # kein argument benötigt, da per Default die Stimuli des richtigen Experiments gezeigt werden
-    save_data_event1()
+    save_data(time = time_ev1, event = 'gegenueberstellung',opponent = opponent, op_hier = op_hier, left_picture = left_picture, right_picture = right_picture, missing = '', response_sp2 = '', accuracy_sp2 = '', accuracy_op = '', Hier_rel = '', Rank = '', Rank_change = '')
     time_ev2, response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback()
-    save_data_event2()
+    save_data(time = time_ev2,event = 'trial_feedback',opponent = '', op_hier='', left_picture='', right_picture='', missing = missing, response_sp2 = response_spieler2, accuracy_sp2 = accuracy_sp2, accuracy_op = accuracy_op, Hier_rel = [str(op_hier)+str(accuracy_sp2)+str(accuracy_op)], Rank='', Rank_change='')
     
     # Füge die Antwort und die Genauigkeit zur Liste der Spieler hinzu
     spieler_accuracies[proband].append(accuracy_sp2)
@@ -555,7 +500,7 @@ for spieler_index in range(num_trials_gesamt):
         sortierte_spieler = get_sorted_results(spieler_index+1)
         print(f"\tsortierte Spieler: {sortierte_spieler}")
         time_ev3, platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
-        save_data_event3()
+        save_data(time = time_ev3,event = 'rank_feedback',opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
 
 print('ENDE des richtigen Experiments ...')
 
