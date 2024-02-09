@@ -250,7 +250,7 @@ def get_and_show_stimuli(trial_run=False):
     right_sterne_stim = visual.ImageStim(win=win,image=right_stars,size=sterne_size,pos=[0.4, 0.275])
 
     # Präsentiere die Bilder
-    time_ev1 = clock.getTime()
+    if not trial_run: save_data(time = clock.getTime(), event = 'gegenueberstellung',opponent = opponent, op_hier = op_hier, left_picture = left_picture, right_picture = right_picture)
     for frame in range(int(1.5 * 60)):  # 60 Hz Bildwiederholfrequenz
         opponent_text_stim.draw()
         opponent_pic_stim.draw()
@@ -283,7 +283,8 @@ def get_and_show_stimuli(trial_run=False):
         'right_spieler_stim' : right_spieler_stim,
         'right_sterne_stim' : right_sterne_stim
     }
-    return time_ev1, opponent, op_hier, left_name, stimuli
+    return opponent, op_hier, left_name, stimuli
+
     
 def get_and_show_feedback(trial_run=False):
     #clock = core.Clock()
@@ -334,7 +335,7 @@ def get_and_show_feedback(trial_run=False):
     right_thumb_stim = visual.ImageStim(win=win,image= right_thumb,size = thumb_size,pos = [0.7, 0.48])
         
     # Zeige den Feedback-Bildschirm für eine kurze Dauer an (z. B. 1 Sekunde)
-    time_ev2 = clock.getTime()
+    if not trial_run: save_data(time = clock.getTime(),event = 'trial_feedback', missing = missing, response_sp2 = response_spieler2, accuracy_sp2 = accuracy_sp2, accuracy_op = accuracy_op, Hier_rel = str(op_hier)+str(accuracy_sp2)+str(accuracy_op))
     for frame in range(int(dur_feedback * 60)):  # 60 Hz Bildwiederholfrequenz für 1,5 Sekunde
         feedback_text_stim.draw()
         left_thumb_stim.draw()
@@ -346,7 +347,8 @@ def get_and_show_feedback(trial_run=False):
         if not trial_run: stimuli['right_sterne_stim'].draw(); stimuli['left_sterne_stim'].draw()
         win.flip()
 
-    return time_ev2, return_response, missing, accuracy_sp2, accuracy_op
+    return return_response, missing, accuracy_sp2, accuracy_op
+
 
 def get_sorted_results(round_number):
     # Aktualisiere die Leistungen
@@ -395,7 +397,7 @@ def show_sorted_resulsts(trial_run=False):
     third_stars_stim = visual.ImageStim(win=win, image= sterne_bildpfade[2], size= sterne_size, pos=[0.6, -0.7])
     third_leistung_stim = visual.TextStim(win=win,text = f"{third_leistung}%", color = (-1,-1,-1), pos=[0.6,-0.8])
     
-    time_ev3 = clock.getTime()
+    if not trial_run: save_data(time = clock.getTime(),event = 'rank_feedback',Rank = platzierung_sp2, Rank_change = vergleichs_variable)
     for frame in range(int(dur_hierarchie * 60)):  # 60 Hz Bildwiederholfrequenz für 5 Sekunde
         first_name_stim.draw()
         first_picture_stim.draw()
@@ -411,7 +413,8 @@ def show_sorted_resulsts(trial_run=False):
         third_leistung_stim.draw()
         if not trial_run: vergleichs_stim.draw()
         win.flip()
-    return time_ev3, platzierung_sp2, vergleichs_variable
+    return platzierung_sp2, vergleichs_variable
+
 #endregion - function definitions
 
 #region - Übungsrunden
@@ -427,8 +430,8 @@ print('BEGINN der Übungsrunden ...')
 for spieler_index in range(num_trials_uebung):
     print(f"beginne Übungsrunde {spieler_index+1} von {num_trials_uebung}")
     left_picture, right_picture = get_rnd_picture()
-    time_ev1, opponent, op_hier, left_name, stimuli = get_and_show_stimuli(True) # arg = True, weil wir in den Übungsrunden sind
-    time_ev2, response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback(True)
+    opponent, op_hier, left_name, stimuli = get_and_show_stimuli(True) # arg = True, weil wir in den Übungsrunden sind
+    response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback(True)
 
     spieler_accuracies[proband].append(accuracy_sp2)
     spieler_accuracies[opponent].append(accuracy_op)
@@ -442,14 +445,14 @@ check_q([left_but, right_but, "q"])
 # Sortiere die Spieler nach ihrer Leistung absteigend
 sortierte_spieler = get_sorted_results(num_trials_uebung)
 print(f"sortierte Spieler: {sortierte_spieler}")
-time_ev3, platzierung_sp2, vergleichs_variable = show_sorted_resulsts(True)
+platzierung_sp2, vergleichs_variable = show_sorted_resulsts(True)
 # save_data erwartet, dass es die Variable spieler_index gibt. Außerhalb des Loops gibt's sie aber nicht, also setzen wir sie hier explizit
 spieler_index = -1 # -> in save_data wird +1 gerechnet, sodass die Übungsrunden jetzt als Runde 0 in der Output Datei steht
-save_data(time = time_ev3,event = 'rank_feedback_uebungsrunden', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
+save_data(time = clock.getTime(),event = 'rank_feedback_uebungsrunden', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
 vorherige_platzierung_sp2 = platzierung_sp2
 #check_q([left_but, right_but, "q"])
 print('ENDE der Übungsrunden ...')
-save_data(time = clock.getTime(), event='Ende Übungsrunden, warten auf Scanner')
+#save_data(time = clock.getTime(), event='Ende Übungsrunden, warten auf Scanner')
 #endregion - Übungsrunden
             
 #region - richtiges Experiment
@@ -461,30 +464,26 @@ check_q(['space', 'q']) # Warten Sie auf die Leertaste, um das Experiment zu sta
 visual.TextStim(win=win,text=f"Warten auf Signal des Scanners...",color=(-1,-1,-1)).draw()
 win.flip()
 core.wait(1)
-#hardware.emulator.launchScan(win=win, TR=2, volumes=200, sync='s',globalClock=True, simResponses=True, mode='Test')# 
-#event.waitKeys(keyList=['s'])#auf den ersten puls des scanners warten. Der Puls wird von der Stimulus Box als 's' weitergeleitet.
+
+# Accuracies und Leistungen neu initialisieren
+spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
+spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
+
 pulse_counter = 0
 while pulse_counter < 5:
     pulse = event.waitKeys(keyList=['s'])
     if pulse:
         pulse_counter+=1
 
-
-# Accuracies und Leistungen neu initialisieren
-spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
-spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
-
 clock.reset()
 # Beginn der Trials
 print('BEGINN des richtigen Experiments ...')
-save_data(time = clock.getTime(), event='Beginn des richtigen Experiments')
+#save_data(time = clock.getTime(), event='Beginn des richtigen Experiments')
 for spieler_index in range(num_trials_gesamt):
     print(f"beginne Trial {spieler_index+1} von {num_trials_gesamt}...")
     left_picture, right_picture = get_rnd_picture()
-    time_ev1, opponent, op_hier, left_name, stimuli = get_and_show_stimuli() # kein argument benötigt, da per Default die Stimuli des richtigen Experiments gezeigt werden
-    save_data(time = time_ev1, event = 'gegenueberstellung',opponent = opponent, op_hier = op_hier, left_picture = left_picture, right_picture = right_picture)
-    time_ev2, response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback()
-    save_data(time = time_ev2,event = 'trial_feedback', missing = missing, response_sp2 = response_spieler2, accuracy_sp2 = accuracy_sp2, accuracy_op = accuracy_op, Hier_rel = str(op_hier)+str(accuracy_sp2)+str(accuracy_op))
+    opponent, op_hier, left_name, stimuli = get_and_show_stimuli() # kein argument benötigt, da per Default die Stimuli des richtigen Experiments gezeigt werden
+    response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback()
     
     # Füge die Antwort und die Genauigkeit zur Liste der Spieler hinzu
     spieler_accuracies[proband].append(accuracy_sp2)
@@ -496,8 +495,7 @@ for spieler_index in range(num_trials_gesamt):
     if (spieler_index+1) % 4 == 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
         sortierte_spieler = get_sorted_results(spieler_index+1)
         print(f"\tsortierte Spieler: {sortierte_spieler}")
-        time_ev3, platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
-        save_data(time = time_ev3,event = 'rank_feedback',Rank = platzierung_sp2, Rank_change = vergleichs_variable)
+        platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
 
 print('ENDE des richtigen Experiments ...')
 
