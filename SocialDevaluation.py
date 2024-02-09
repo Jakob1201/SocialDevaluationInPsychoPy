@@ -23,12 +23,12 @@ spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
 spieler_platzierungen = {spieler_namen[name]: 0 for name in spieler_namen}
 proband = spieler_namen['spieler2']
 vorherige_platzierung_sp2 = None # wird später in show_sorted_resulsts benötigt
-platzierung_sp2 = None
-vergleichs_variable = ''
 #endregion
 
 # Erstelle ein Fenster
 win = visual.Window(size=(1536, 864), color=(0.75,0.75,0.75), fullscr=True)  # Use RGB tuple for gray color(0.75,0.75,0.75)
+# setup fixation_cross
+fix_cross = visual.TextStim(win=win, text="+", pos=[0,0], color='black', height = 0.4)
 
 #region - Initialisiere die Parameter
 num_trials_per_spieler = 4
@@ -43,7 +43,6 @@ spieler_pic_size = [0.25, 0.5]
 sterne_size = [0.25, 0.1]
 thumb_size = [0.2, 0.35]
 background_color = [0.5, 0.5, 0.5]  # Background color as RGB tuple
-data_path = "trial_data/"
 # ein boolean 'scanner' ist verständlicher als setting 1 oder 2
 scanner = False # oder eben True
 if scanner:
@@ -61,7 +60,6 @@ picture_files_34 = ["img/34-dots-400x400.bmp"] + [f"img/34-dots-400x400({i}).bmp
 picture_files_36 = ["img/36-dots-400x400.bmp"] + [f"img/36-dots-400x400({i}).bmp" for i in range(1,11)]
 
 last_left_picture = last_right_picture = None # wird später in get_rnd_picture benötigt
-
 
 spieler_bildpfade = {
     spieler_namen['spieler1']: "img/Dummy5_blau.bmp",
@@ -148,42 +146,38 @@ while current_slide < len(instruktionsbilder):
 
 #region - output filenames and function to save data about trials
 date = data.getDateStr()
-#filename_exp_data = os.path.join(data_path, f"{date}_{participant_id}_{run_number}_exp_data.csv")
+data_path = "trial_data/"
 filename_trial_data = os.path.join(data_path, f"{date}_{participant_id}_{run_number}_trial_data.csv")
 
 trial_data = []
 
-def save_data(time, event, opponent, op_hier, left_picture, right_picture, missing, response_sp2, accuracy_sp2, accuracy_op, Hier_rel, Rank, Rank_change):
+def save_data(time=None, event='', opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank='', Rank_change=''):
+    if time is None:
+        time = clock.getTime()
     dict = {
-    'Proband_in' : participant_id,
+        'Proband_in' : participant_id,
         'Date' : date,
         'Time' : time, 
         'Event' : event,
         'round_no' : spieler_index+1,
         'Opponent' : opponent,
         'Op_Hier' : op_hier,
-        'linkesBild' : left_picture, 
-        'rechtesBild' : right_picture,  
+        'linkesBild' : ((left_picture.replace('img/','')).replace('-dots-400x400','')).replace('.bmp',''), 
+        'rechtesBild' : ((right_picture.replace('img/','')).replace('-dots-400x400','')).replace('.bmp',''), 
         'check_missing' : missing,
         'response_sp2' : response_sp2,
         'accuracy_sp2' : accuracy_sp2, 
         'accuracy_op' : accuracy_op,
         'Hier.rel' : Hier_rel,
         'Rank' : Rank, 
-        'Rank_change' : Rank_change, 
+        'Rank_change' : Rank_change
     }
     trial_data.append(dict)
-    
-spieler_index = 0
-
-event.globalKeys.clear()
-event.globalKeys.add(key='s', func=save_data(time = clock.getTime(),event='pulse', opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank='', Rank_change=''), name = 'scannerpulse')
-
 #endregion
 
 #region - function definitions
-#setup fixation_cross
-fix_cross = visual.TextStim(win=win, text="+", pos=[0,0], color='black', height = 0.4)
+event.globalKeys.clear()
+event.globalKeys.add(key='s', func=save_data, func_kwargs=dict(event='pulse'), name = 'scannerpulse')
 
 def check_q(acceptKeys):
     clock = core.Clock()
@@ -297,7 +291,8 @@ def get_and_show_feedback(trial_run=False):
     response_spieler2 = event.getKeys(keyList=[left_but, right_but, 'q'])
     if response_spieler2:
         #time = response_spieler2[0][1]
-        dir = response_spieler2[0] # prüfe nur den ersten gedrückten Key #EXPERIMENT STÜRZT AB, WENN KEINE TASTE GEDRÜCKT WIRD
+        dir = response_spieler2[0] # prüfe nur den ersten gedrückten Key
+        return_response = dir
         if (dir == right_but and right_picture in picture_files_36) or (dir == left_but and left_picture in picture_files_36):
             accuracy_sp2 = 1  # Correct response
             missing = 0
@@ -312,6 +307,7 @@ def get_and_show_feedback(trial_run=False):
         accuracy_sp2 = 0  # No response #-1??
         missing = 1
         feedback_text = "Zu langsam!"
+        return_response = feedback_text
         feedback_color = (1, 0, 0)
     # Überprüfe die 'q'-Taste, um das Experiment zu beenden
     if 'q' in response_spieler2:
@@ -350,7 +346,7 @@ def get_and_show_feedback(trial_run=False):
         if not trial_run: stimuli['right_sterne_stim'].draw(); stimuli['left_sterne_stim'].draw()
         win.flip()
 
-    return time_ev2, response_spieler2, missing, accuracy_sp2, accuracy_op
+    return time_ev2, return_response, missing, accuracy_sp2, accuracy_op
 
 def get_sorted_results(round_number):
     # Aktualisiere die Leistungen
@@ -362,7 +358,7 @@ def get_sorted_results(round_number):
     return sorted(spieler_leistungen.items(), key=lambda x: x[1], reverse=True)
 
 def show_sorted_resulsts(trial_run=False):
-    global vorherige_platzierung_sp2, vergleichs_variable
+    global vorherige_platzierung_sp2 #, vergleichs_variable
 
     first_name, first_leistung = sortierte_spieler[0]
     second_name, second_leistung = sortierte_spieler[1]
@@ -372,9 +368,9 @@ def show_sorted_resulsts(trial_run=False):
         spieler_platzierungen[spieler] = index
 
     platzierung_sp2 = spieler_platzierungen[proband]
+    vergleichs_variable = ''
     if not trial_run:
         aktuelle_platzierung_sp2 = platzierung_sp2
-        vergleichs_variable = ""
         if vorherige_platzierung_sp2 is not None:
             if aktuelle_platzierung_sp2 < vorherige_platzierung_sp2:
                 vergleichs_variable = "Aufgestiegen" # In der Output-Datei nutzen
@@ -447,10 +443,13 @@ check_q([left_but, right_but, "q"])
 sortierte_spieler = get_sorted_results(num_trials_uebung)
 print(f"sortierte Spieler: {sortierte_spieler}")
 time_ev3, platzierung_sp2, vergleichs_variable = show_sorted_resulsts(True)
-save_data(time = time_ev3,event = 'rank_feedback_uebungsrunden',opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
+# save_data erwartet, dass es die Variable spieler_index gibt. Außerhalb des Loops gibt's sie aber nicht, also setzen wir sie hier explizit
+spieler_index = -1 # -> in save_data wird +1 gerechnet, sodass die Übungsrunden jetzt als Runde 0 in der Output Datei steht
+save_data(time = time_ev3,event = 'rank_feedback_uebungsrunden', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
 vorherige_platzierung_sp2 = platzierung_sp2
 #check_q([left_but, right_but, "q"])
 print('ENDE der Übungsrunden ...')
+save_data(time = clock.getTime(), event='Ende Übungsrunden, warten auf Scanner')
 #endregion - Übungsrunden
             
 #region - richtiges Experiment
@@ -478,14 +477,14 @@ spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
 clock.reset()
 # Beginn der Trials
 print('BEGINN des richtigen Experiments ...')
-## WIE KANN ICH HIER MIT EINER WHILE-SCHLEIFE "PULSE" SPEICHERN??
+save_data(time = clock.getTime(), event='Beginn des richtigen Experiments')
 for spieler_index in range(num_trials_gesamt):
     print(f"beginne Trial {spieler_index+1} von {num_trials_gesamt}...")
     left_picture, right_picture = get_rnd_picture()
     time_ev1, opponent, op_hier, left_name, stimuli = get_and_show_stimuli() # kein argument benötigt, da per Default die Stimuli des richtigen Experiments gezeigt werden
-    save_data(time = time_ev1, event = 'gegenueberstellung',opponent = opponent, op_hier = op_hier, left_picture = left_picture, right_picture = right_picture, missing = '', response_sp2 = '', accuracy_sp2 = '', accuracy_op = '', Hier_rel = '', Rank = '', Rank_change = '')
+    save_data(time = time_ev1, event = 'gegenueberstellung',opponent = opponent, op_hier = op_hier, left_picture = left_picture, right_picture = right_picture)
     time_ev2, response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback()
-    save_data(time = time_ev2,event = 'trial_feedback',opponent = '', op_hier='', left_picture='', right_picture='', missing = missing, response_sp2 = response_spieler2, accuracy_sp2 = accuracy_sp2, accuracy_op = accuracy_op, Hier_rel = [str(op_hier)+str(accuracy_sp2)+str(accuracy_op)], Rank='', Rank_change='')
+    save_data(time = time_ev2,event = 'trial_feedback', missing = missing, response_sp2 = response_spieler2, accuracy_sp2 = accuracy_sp2, accuracy_op = accuracy_op, Hier_rel = str(op_hier)+str(accuracy_sp2)+str(accuracy_op))
     
     # Füge die Antwort und die Genauigkeit zur Liste der Spieler hinzu
     spieler_accuracies[proband].append(accuracy_sp2)
@@ -498,7 +497,7 @@ for spieler_index in range(num_trials_gesamt):
         sortierte_spieler = get_sorted_results(spieler_index+1)
         print(f"\tsortierte Spieler: {sortierte_spieler}")
         time_ev3, platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
-        save_data(time = time_ev3,event = 'rank_feedback',opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
+        save_data(time = time_ev3,event = 'rank_feedback',Rank = platzierung_sp2, Rank_change = vergleichs_variable)
 
 print('ENDE des richtigen Experiments ...')
 
