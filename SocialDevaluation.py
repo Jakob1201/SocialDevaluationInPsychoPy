@@ -35,6 +35,7 @@ num_trials_per_spieler = 4
 num_spieler = len(spieler_namen) - 1 # Wieso denn nur 2 Spieler??
 num_trials_gesamt = num_trials_per_spieler * num_spieler
 num_trials_uebung = num_spieler * 1
+num_runs = 2
 trial_duration = 2.0  # 2000ms
 dur_feedback = 4.0 # 4000ms
 dur_hierarchie = 5.0 # 5000ms
@@ -159,6 +160,7 @@ def save_data(time=None, event='', opponent='', op_hier='', left_picture='', rig
         'Date' : date,
         'Time' : time, 
         'Event' : event,
+        'run_no' : run_index +1,
         'round_no' : spieler_index+1,
         'Opponent' : opponent,
         'Op_Hier' : op_hier,
@@ -178,6 +180,11 @@ def save_data(time=None, event='', opponent='', op_hier='', left_picture='', rig
 #region - function definitions
 event.globalKeys.clear()
 event.globalKeys.add(key='s', func=save_data, func_kwargs=dict(event='pulse'), name = 'scannerpulse')
+
+def fix_func (duration):
+    for frame in range(int(duration*60)):
+        fix_cross.draw()
+        win.flip()
 
 def check_q(acceptKeys):
     clock = core.Clock()
@@ -335,7 +342,7 @@ def get_and_show_feedback(trial_run=False):
     right_thumb_stim = visual.ImageStim(win=win,image= right_thumb,size = thumb_size,pos = [0.7, 0.48])
         
     # Zeige den Feedback-Bildschirm für eine kurze Dauer an (z. B. 1 Sekunde)
-    if not trial_run: save_data(time = clock.getTime(),event = 'trial_feedback', missing = missing, response_sp2 = response_spieler2, accuracy_sp2 = accuracy_sp2, accuracy_op = accuracy_op, Hier_rel = str(op_hier)+str(accuracy_sp2)+str(accuracy_op))
+    if not trial_run: save_data(time = clock.getTime(),event = 'trial_feedback', missing = missing, response_sp2 = response_spieler2, accuracy_sp2 = accuracy_sp2, accuracy_op = accuracy_op, Hier_rel = [str(op_hier)+str(accuracy_sp2)+str(accuracy_op)])
     for frame in range(int(dur_feedback * 60)):  # 60 Hz Bildwiederholfrequenz für 1,5 Sekunde
         feedback_text_stim.draw()
         left_thumb_stim.draw()
@@ -422,13 +429,14 @@ visual.TextStim(win=win, text="Wenn Sie bereit sind in die Übungsrunden zu star
 win.flip()
 check_q([left_but, right_but, "q"])
 
-for frame in range(int(5 * 60)):  # 60 Hz Bildwiederholfrequenz für 15 Sekunden
-        fix_cross.draw()
-        win.flip()
+#for frame in range(int(5 * 60)):  # 60 Hz Bildwiederholfrequenz für 5 Sekunden
+#        fix_cross.draw()
+#        win.flip()
 
 print('BEGINN der Übungsrunden ...')
 for spieler_index in range(num_trials_uebung):
     print(f"beginne Übungsrunde {spieler_index+1} von {num_trials_uebung}")
+    fix_func(1)
     left_picture, right_picture = get_rnd_picture()
     opponent, op_hier, left_name, stimuli = get_and_show_stimuli(True) # arg = True, weil wir in den Übungsrunden sind
     response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback(True)
@@ -447,6 +455,7 @@ sortierte_spieler = get_sorted_results(num_trials_uebung)
 print(f"sortierte Spieler: {sortierte_spieler}")
 platzierung_sp2, vergleichs_variable = show_sorted_resulsts(True)
 # save_data erwartet, dass es die Variable spieler_index gibt. Außerhalb des Loops gibt's sie aber nicht, also setzen wir sie hier explizit
+run_index = -1
 spieler_index = -1 # -> in save_data wird +1 gerechnet, sodass die Übungsrunden jetzt als Runde 0 in der Output Datei steht
 save_data(time = clock.getTime(),event = 'rank_feedback_uebungsrunden', Rank = platzierung_sp2, Rank_change = vergleichs_variable)
 vorherige_platzierung_sp2 = platzierung_sp2
@@ -454,54 +463,65 @@ vorherige_platzierung_sp2 = platzierung_sp2
 print('ENDE der Übungsrunden ...')
 #save_data(time = clock.getTime(), event='Ende Übungsrunden, warten auf Scanner')
 #endregion - Übungsrunden
-            
-#region - richtiges Experiment
-visual.TextStim(win=win,text=f"Nun beginnt das eigentliche Spiel.\n\n Warten Sie bitte bis der Versuchleiter das Spiel startet.",color = (-1,-1,-1)).draw()
-win.flip()
-check_q(['space', 'q']) # Warten Sie auf die Leertaste, um das Experiment zu starten
-
-# Auf den ersten Puls des Scanners warten
-visual.TextStim(win=win,text=f"Warten auf Signal des Scanners...",color=(-1,-1,-1)).draw()
-win.flip()
-core.wait(1)
 
 # Accuracies und Leistungen neu initialisieren
 spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
 spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
 
-pulse_counter = 0
-while pulse_counter < 5:
-    pulse = event.waitKeys(keyList=['s'])
-    if pulse:
-        pulse_counter+=1
+#region - richtiges Experiment
+visual.TextStim(win=win,text=f"Nun beginnt das eigentliche Spiel.\n\n Drücken Sie eine beliebige Taste um fortzufahren.", color = (-1,-1,-1)).draw()
+win.flip()
+check_q([left_but, right_but, "q"])
 
-clock.reset()
-# Beginn der Trials
 print('BEGINN des richtigen Experiments ...')
-#save_data(time = clock.getTime(), event='Beginn des richtigen Experiments')
-for spieler_index in range(num_trials_gesamt):
-    print(f"beginne Trial {spieler_index+1} von {num_trials_gesamt}...")
-    left_picture, right_picture = get_rnd_picture()
-    opponent, op_hier, left_name, stimuli = get_and_show_stimuli() # kein argument benötigt, da per Default die Stimuli des richtigen Experiments gezeigt werden
-    response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback()
-    
-    # Füge die Antwort und die Genauigkeit zur Liste der Spieler hinzu
-    spieler_accuracies[proband].append(accuracy_sp2)
-    spieler_accuracies[opponent].append(accuracy_op)
-    print(f"\taccuracis vom Probanden: {spieler_accuracies[proband]}")
-    print(f"\taccuracis vom Computer ({opponent}): {spieler_accuracies[opponent]}")
 
-    # Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind, zeige die Rangfolge der Spieler an
-    if (spieler_index+1) % 4 == 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
-        sortierte_spieler = get_sorted_results(spieler_index+1)
-        print(f"\tsortierte Spieler: {sortierte_spieler}")
-        platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
+for run_index in range(num_runs):
+    
+    # Möglichkeit zur Kontaktaufnahme
+    visual.TextStim(win=win,text=f"Warten auf den Versuchsleiter...",color=(-1,-1,-1)).draw()
+    win.flip()
+    check_q(['space', 'q'])
+    
+    # Auf den ersten Puls des Scanners warten
+    visual.TextStim(win=win,text=f"Warten auf Signal des Scanners...",color=(-1,-1,-1)).draw()
+    win.flip()
+    core.wait(1)
+
+    pulse_counter = 0
+    while pulse_counter < 5:
+        pulse = event.waitKeys(keyList=['s'])
+        if pulse:
+            pulse_counter+=1
+
+    clock.reset()
+    # Beginn der Trials
+    for spieler_index in range(num_trials_gesamt):
+        print(f"beginne Trial {spieler_index+1} von {num_trials_gesamt}...")
+        fix_func(1)
+        left_picture, right_picture = get_rnd_picture()
+        opponent, op_hier, left_name, stimuli = get_and_show_stimuli() # kein argument benötigt, da per Default die Stimuli des richtigen Experiments gezeigt werden
+        response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback()
+    
+        # Füge die Antwort und die Genauigkeit zur Liste der Spieler hinzu
+        spieler_accuracies[proband].append(accuracy_sp2)
+        spieler_accuracies[opponent].append(accuracy_op)
+        print(f"\taccuracis vom Probanden: {spieler_accuracies[proband]}")
+        print(f"\taccuracis vom Computer ({opponent}): {spieler_accuracies[opponent]}")
+
+        # Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind, zeige die Rangfolge der Spieler an
+        if (spieler_index+1) % 4 == 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
+            sortierte_spieler = get_sorted_results((spieler_index+1) * (run_index+1))
+            print(f"\tsortierte Spieler: {sortierte_spieler}")
+            fix_func(1)
+            platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
 
 print('ENDE des richtigen Experiments ...')
 
-for frame in range(int(15 * 60)):  # 60 Hz Bildwiederholfrequenz für 15 Sekunden
-        fix_cross.draw()
-        win.flip()
+#for frame in range(int(15 * 60)):  # 60 Hz Bildwiederholfrequenz für 15 Sekunden
+ #       fix_cross.draw()
+  #      win.flip()
+
+fix_func(10)
 
 wartungs_text = visual.TextStim(win=win,text="Vielen Dank für ihre Teilnahme! \n\n Bitte warten Sie, bis der Versuchsleiter das Spiel beendet.",color = (-1,-1,-1))
 wartungs_text.draw()
