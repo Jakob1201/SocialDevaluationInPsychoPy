@@ -515,6 +515,11 @@ for run_index in range(num_runs):
             fix_func(1)
             platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
 
+    # save data from this run and reset the trial_data list afterwards
+    df = pd.DataFrame(trial_data)
+    filename_trial_data = os.path.join(data_path, f"{date}_{participant_id}_{run_number}_Runde{run_index+1}_trial_data.csv")
+    df.to_csv(filename_trial_data)
+    trial_data = []
 print('ENDE des richtigen Experiments ...')
 
 #for frame in range(int(15 * 60)):  # 60 Hz Bildwiederholfrequenz für 15 Sekunden
@@ -526,11 +531,6 @@ fix_func(10)
 wartungs_text = visual.TextStim(win=win,text="Vielen Dank für ihre Teilnahme! \n\n Bitte warten Sie, bis der Versuchsleiter das Spiel beendet.",color = (-1,-1,-1))
 wartungs_text.draw()
 win.flip()
-
-# Save data
-#trials.saveAsWideText(filename_exp_data, delim=',', appendFile=False, fileCollisionMethod='overwrite')
-df = pd.DataFrame(trial_data)
-df.to_csv(filename_trial_data)
 
 event.waitKeys(keyList=['q']) # Beende das Experiment mit q
 win.close()
