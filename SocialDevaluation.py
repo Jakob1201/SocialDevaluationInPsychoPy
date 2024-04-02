@@ -19,7 +19,7 @@ else:
 #region - Initialisiere die Spieler
 spieler_namen = {'spieler1': "Spieler 1",'spieler2': vorname, 'spieler3': "Spieler 3"}
 spieler_accuracies = {spieler_namen[name]: [] for name in spieler_namen}
-spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen}
+spieler_leistungen = {spieler_namen[name]: 0 for name in spieler_namen} # accuracies relative to number of rounds played
 spieler_platzierungen = {spieler_namen[name]: 0 for name in spieler_namen}
 proband = spieler_namen['spieler2']
 vorherige_platzierung_sp2 = None # wird später in show_sorted_resulsts benötigt
@@ -31,11 +31,11 @@ win = visual.Window(size=(1536, 864), color=(0.75,0.75,0.75), fullscr=True)  # U
 fix_cross = visual.TextStim(win=win, text="+", pos=[0,0], color='black', height = 0.4)
 
 #region - Initialisiere die Parameter
-num_trials_per_spieler = 4
-num_spieler = len(spieler_namen) - 1 # Wieso denn nur 2 Spieler??
-num_trials_gesamt = num_trials_per_spieler * num_spieler
-num_trials_uebung = num_spieler * 1
-num_runs = 2
+num_trials_per_spieler = 8 # How many round shall be played against each opponent in one run?
+num_spieler = len(spieler_namen) - 1 #2 gegenspieler
+num_trials_gesamt = num_trials_per_spieler * num_spieler # Number of rounds per run, dependent on num_trials_per_spieler
+num_trials_uebung = num_spieler * 4 # Number of rounds in the trial rounds
+num_runs = 2 # Number of runs
 trial_duration = 2.0  # 2000ms
 dur_feedback = 4.0 # 4000ms
 dur_hierarchie = 5.0 # 5000ms
@@ -44,7 +44,7 @@ spieler_pic_size = [0.25, 0.5]
 sterne_size = [0.25, 0.1]
 thumb_size = [0.2, 0.35]
 background_color = [0.5, 0.5, 0.5]  # Background color as RGB tuple
-# ein boolean 'scanner' ist verständlicher als setting 1 oder 2
+# Define right and left button dependend on the setting of the experiment (scanner or laptop)
 scanner = False # oder eben True
 if scanner:
     left_but = 'b'
@@ -56,7 +56,7 @@ clock = core.Clock()
 #endregion
 
 #region - pictures
-# relative path to picture files (in img subfolder)
+# relative path to picture files (in img subfolder) (path is relative to the folder in which SocialDevaluation.py is stored)
 picture_files_34 = ["img/34-dots-400x400.bmp"] + [f"img/34-dots-400x400({i}).bmp" for i in range(1,11)]
 picture_files_36 = ["img/36-dots-400x400.bmp"] + [f"img/36-dots-400x400({i}).bmp" for i in range(1,11)]
 
@@ -120,6 +120,7 @@ if 'q' in event.waitKeys(keyList=[left_but, right_but, "q"]):
     win.close()
     core.quit()  
 
+# Schleife, in der durch drücken der Pfeiltasten die Instruktionsbilder und -texte durchgeblättert werden können
 current_slide = 0  # Index des aktuellen Bildes
 while current_slide < len(instruktionsbilder):
     instruktions_bild.image = instruktionsbilder[current_slide]
@@ -152,6 +153,7 @@ filename_trial_data = os.path.join(data_path, f"{date}_{participant_id}_{run_num
 
 trial_data = []
 
+# when applied, the function save_data collects the information given to it as parameters. If no parameters are given, the function stores blank information
 def save_data(time=None, event='', opponent='', op_hier='', left_picture='', right_picture='', missing='', response_sp2='', accuracy_sp2='', accuracy_op='', Hier_rel='', Rank='', Rank_change=''):
     if time is None:
         time = clock.getTime()
@@ -179,13 +181,16 @@ def save_data(time=None, event='', opponent='', op_hier='', left_picture='', rig
 
 #region - function definitions
 event.globalKeys.clear()
+#Im verlauf des gesamten experiments löst das drücken von 's' die save_data function aus, in der ein Puls inklusive Zeit gespeichert wird.
 event.globalKeys.add(key='s', func=save_data, func_kwargs=dict(event='pulse'), name = 'scannerpulse')
 
+# Fixation cross
 def fix_func (duration):
     for frame in range(int(duration*60)):
         fix_cross.draw()
         win.flip()
 
+# function to accept relevant keys. Quitting if 'q' is pressed
 def check_q(acceptKeys):
     clock = core.Clock()
     key = event.waitKeys(keyList=acceptKeys, timeStamped=clock)
@@ -195,32 +200,35 @@ def check_q(acceptKeys):
         win.close()
         core.quit()
 
+# Random choice of pictures with 34 and 36 dots and random assignement to the left or right position
 def get_rnd_picture():
     global last_left_picture, last_right_picture
 
-    if random.choice([True, False]): # Zufällige Auswahl aus den möglichen Bildern und zufällige Wahl der Position
+    if random.choice([True, False]): 
         left_picture = random.choice([pic for pic in picture_files_34 if pic != last_left_picture])
         right_picture = random.choice([pic for pic in picture_files_36 if pic != last_right_picture])
     else:
         left_picture = random.choice([pic for pic in picture_files_36 if pic != last_right_picture])
         right_picture = random.choice([pic for pic in picture_files_34 if pic != last_left_picture])
-    #Setzen der "last pictures" für den nächsten Durchgang
+    #Define last_pictures, that cant be selected in the next round
     last_left_picture = left_picture
     last_right_picture = right_picture
 
     return left_picture, right_picture
 
+#Darstellung einer Spielrunde
 def get_and_show_stimuli(trial_run=False):
     
-    #Mitspieler festlegen # Vorlage für conditionals der Sterne und Positionen siehe Editordatei "Sterne und Positionszuordnung"  
+    #Define the opponent, dependent on the round number (spieler_index)  
     opponent = spieler_namen['spieler1'] if spieler_index % 2 == 0 else spieler_namen['spieler3']
     opponent_pic = spieler_bildpfade[opponent]
     opponent_stars = sterne_bildpfade[spieler_platzierungen[opponent]]
-    # using the global variable proband
+    # using the global variable proband and spieler_platzierungen to define pictures for the proband
     proband_pic = spieler_bildpfade[proband]
     proband_stars = sterne_bildpfade[spieler_platzierungen[proband]]
-    # are we in the trial run or the real experiment
+    # are we in the trial run or the real experiment. 
     condition = spieler_index % 2 == 0 if trial_run else spieler_platzierungen[proband] > spieler_platzierungen[opponent]
+    # 'condition' is True if proband has a lower rank (e.g. 3 vs. 2 or 2 vs. 1) than the opponent, so proband will be displayed on the right side of the screen
 
     if condition: 
         op_hier = 1 # für die Output-Datei
@@ -239,7 +247,7 @@ def get_and_show_stimuli(trial_run=False):
         left_spieler_pic = proband_pic
         left_stars = proband_stars
 
-    # Stimuli erstellen 
+    # Define visual stimuli 
     opponent_text_stim = visual.TextStim(win=win,text=f"Sie spielen mit {opponent}",color = (-1,-1,-1), pos=[0,0.5])
     opponent_pic_stim = visual.ImageStim(win=win,image=opponent_pic,size=spieler_pic_size,pos=[0,0])
     opponent_stars_stim = visual.ImageStim(win=win,image=opponent_stars,size=sterne_size,pos=[0,-0.205])
@@ -256,9 +264,9 @@ def get_and_show_stimuli(trial_run=False):
     left_sterne_stim = visual.ImageStim(win=win,image=left_stars,size=sterne_size,pos=[-0.4, 0.275])
     right_sterne_stim = visual.ImageStim(win=win,image=right_stars,size=sterne_size,pos=[0.4, 0.275])
 
-    # Präsentiere die Bilder
+    # present the stimuli on screen
     if not trial_run: save_data(time = clock.getTime(), event = 'gegenueberstellung',opponent = opponent, op_hier = op_hier, left_picture = left_picture, right_picture = right_picture)
-    for frame in range(int(1.5 * 60)):  # 60 Hz Bildwiederholfrequenz
+    for frame in range(int(1.5 * 60)):  # 60 Hz Bildwiederholfrequenz, 1.5 Seconds
         opponent_text_stim.draw()
         opponent_pic_stim.draw()
         if not trial_run: opponent_stars_stim.draw()
@@ -272,7 +280,7 @@ def get_and_show_stimuli(trial_run=False):
         right_name_stim.draw()
         win.flip()
     
-    for frame in range(int(trial_duration * 60)):  # 60 Hz Bildwiederholfrequenz
+    for frame in range(int(trial_duration * 60)):  # 60 Hz Bildwiederholfrequenz, trial_duration == seconds to present the screen
         left_stimulus.draw()
         right_stimulus.draw()
         left_spieler_stim.draw()
@@ -292,28 +300,25 @@ def get_and_show_stimuli(trial_run=False):
     }
     return opponent, op_hier, left_name, stimuli
 
-    
+# Define the feedback screen
 def get_and_show_feedback(trial_run=False):
-    #clock = core.Clock()
-    #response_spieler2 = event.getKeys(keyList=[left_but, right_but, 'q'], timeStamped = clock)
     response_spieler2 = event.getKeys(keyList=[left_but, right_but, 'q'])
     if response_spieler2:
-        #time = response_spieler2[0][1]
-        dir = response_spieler2[0] # prüfe nur den ersten gedrückten Key
+        dir = response_spieler2[0] # check only the first key pressed
         return_response = dir
         if (dir == right_but and right_picture in picture_files_36) or (dir == left_but and left_picture in picture_files_36):
             accuracy_sp2 = 1  # Correct response
-            missing = 0
+            missing = 0 # no missing
             feedback_text = "Richtig!"
             feedback_color = (0, 1, 0)
         else:
             accuracy_sp2 = 0  # Incorrect response
-            missing = 0
+            missing = 0 # no missing
             feedback_text = "Falsch!"
             feedback_color = (1, 0, 0)
     else:
-        accuracy_sp2 = 0  # No response #-1??
-        missing = 1
+        accuracy_sp2 = 0  # Incorrect response
+        missing = 1 # missing
         feedback_text = "Zu langsam!"
         return_response = feedback_text
         feedback_color = (1, 0, 0)
@@ -324,12 +329,12 @@ def get_and_show_feedback(trial_run=False):
 
     feedback_text_stim = visual.TextStim(win=win,text = feedback_text,color = feedback_color,pos = [0,-0.2])
 
-    # Gegenspieler
-    wuerfel_op = random.randint(1, 100)
-    threshold = 81 if spieler_index % 2 == 0 else 41
-    accuracy_op = 1 if wuerfel_op < threshold else 0
+    # Define opponent answers
+    wuerfel_op = random.randint(1, 100) #random number between 1 and 100
+    threshold = 81 if spieler_index % 2 == 0 else 41 #define different probability thresholds for the opponents to give a right answer
+    accuracy_op = 1 if wuerfel_op < threshold else 0 #compare random number with the threshold 
 
-    # Daumenstimuli zuordnen
+    # define feedback thumb stimuli and assign them to the right position
     condition = spieler_index % 2 == 0 if trial_run else left_name == opponent
     if condition: # proband rechts
         right_thumb = thumbup_pfad if accuracy_sp2 == 1 else thumbdown_pfad
@@ -356,7 +361,7 @@ def get_and_show_feedback(trial_run=False):
 
     return return_response, missing, accuracy_sp2, accuracy_op
 
-
+# update the stored performances
 def get_sorted_results(round_number):
     # Aktualisiere die Leistungen
     # ist es absicht, dass bei spieler2 der Faktor 2 fehlt? # Ja, das ist absicht. spieler 2 spielt ja doppelt so viele Runden wie die die anderen Spieler.
@@ -366,6 +371,7 @@ def get_sorted_results(round_number):
     # Sortiere die Spieler nach ihrer Leistung absteigend
     return sorted(spieler_leistungen.items(), key=lambda x: x[1], reverse=True)
 
+# create and present the rank feedback
 def show_sorted_resulsts(trial_run=False):
     global vorherige_platzierung_sp2 #, vergleichs_variable
 
@@ -429,17 +435,14 @@ visual.TextStim(win=win, text="Wenn Sie bereit sind in die Übungsrunden zu star
 win.flip()
 check_q([left_but, right_but, "q"])
 
-#for frame in range(int(5 * 60)):  # 60 Hz Bildwiederholfrequenz für 5 Sekunden
-#        fix_cross.draw()
-#        win.flip()
 
-print('BEGINN der Übungsrunden ...')
-for spieler_index in range(num_trials_uebung):
+print('BEGINN der Übungsrunden ...') #printed in the PsychoPy Runner Output Window
+for spieler_index in range(num_trials_uebung): #the following is repeated for 'num_trials_uebung'-repitions
     print(f"beginne Übungsrunde {spieler_index+1} von {num_trials_uebung}")
-    fix_func(1)
-    left_picture, right_picture = get_rnd_picture()
-    opponent, op_hier, left_name, stimuli = get_and_show_stimuli(True) # arg = True, weil wir in den Übungsrunden sind
-    response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback(True)
+    fix_func(1)# 1. present fixation cross
+    left_picture, right_picture = get_rnd_picture() # 2. perform the function get_rnd_picture
+    opponent, op_hier, left_name, stimuli = get_and_show_stimuli(True) # 3. perform the function get_and_show_stimuli. arg = True, weil wir in den Übungsrunden sind
+    response_spieler2, missing, accuracy_sp2, accuracy_op = get_and_show_feedback(True) #4. perform the function get_and_show_feedback
 
     spieler_accuracies[proband].append(accuracy_sp2)
     spieler_accuracies[opponent].append(accuracy_op)
@@ -450,6 +453,7 @@ visual.TextStim(win=win, text="Die Übungsrunden sind abgeschlossen.\n Drücken 
 win.flip()
 check_q([left_but, right_but, "q"])
 
+# Process the result of the trial_rounds
 # Sortiere die Spieler nach ihrer Leistung absteigend
 sortierte_spieler = get_sorted_results(num_trials_uebung)
 print(f"sortierte Spieler: {sortierte_spieler}")
@@ -482,7 +486,7 @@ for run_index in range(num_runs):
     win.flip()
     check_q(['space', 'q'])
     
-    # Auf den ersten Puls des Scanners warten
+    # Auf fünf pulse des Scanners warten
     visual.TextStim(win=win,text=f"Warten auf Signal des Scanners...",color=(-1,-1,-1)).draw()
     win.flip()
     core.wait(1)
@@ -493,7 +497,7 @@ for run_index in range(num_runs):
         if pulse:
             pulse_counter+=1
 
-    clock.reset()
+    clock.reset() # reset the clock after the last of the five pulses
     # Beginn der Trials
     for spieler_index in range(num_trials_gesamt):
         print(f"beginne Trial {spieler_index+1} von {num_trials_gesamt}...")
@@ -510,16 +514,13 @@ for run_index in range(num_runs):
 
         # Nach jeder vierten Runde oder wenn alle Runden abgeschlossen sind, zeige die Rangfolge der Spieler an
         if (spieler_index+1) % 4 == 0 or spieler_index == num_trials_gesamt - 1:#  == num_trials_gesamt - 1: # Der spieler_index startet bei 0, sodass er nach 10 trials bei 9 (num_trials_gesamt - 1) steht.
-            sortierte_spieler = get_sorted_results((spieler_index+1) * (run_index+1))
+            #sortierte_spieler = get_sorted_results((spieler_index+1) * (run_index+1))
+            sortierte_spieler = get_sorted_results((spieler_index+1) + (run_index * num_trials_gesamt))
             print(f"\tsortierte Spieler: {sortierte_spieler}")
             fix_func(1)
             platzierung_sp2, vergleichs_variable = show_sorted_resulsts()
 
 print('ENDE des richtigen Experiments ...')
-
-#for frame in range(int(15 * 60)):  # 60 Hz Bildwiederholfrequenz für 15 Sekunden
- #       fix_cross.draw()
-  #      win.flip()
 
 fix_func(10)
 
